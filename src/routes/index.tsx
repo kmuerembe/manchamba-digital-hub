@@ -4,7 +4,7 @@ import {
   Home, MapPin, MessageCircle, PackagePlus, Search, ShieldCheck, SlidersHorizontal,
   Sparkles, Star, Upload, WifiOff, X,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { citiesOf, provinceNames } from "@/lib/mozambique";
 import tomatoes from "@/assets/tomatoes.jpg";
 import spinach from "@/assets/spinach.jpg";
