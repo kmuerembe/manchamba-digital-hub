@@ -5,9 +5,11 @@ import {
   Sparkles, Star, Upload, WifiOff, X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { citiesOf, provinceNames } from "@/lib/mozambique";
 import tomatoes from "@/assets/tomatoes.jpg";
 import spinach from "@/assets/spinach.jpg";
 import sweetPotato from "@/assets/sweet-potato.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
