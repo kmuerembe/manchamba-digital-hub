@@ -26,13 +26,17 @@ export const Route = createFileRoute("/")({
 });
 
 type Tab = "mercado" | "diagnostico" | "favoritos" | "mensagens" | "aprender" | "perfil";
-type Product = { id: number; name: string; seller: string; location: string; distance: number; price: number; unit: string; category: string; image: string; rating: number; stock: string };
+type Product = { id: number; name: string; seller: string; province: string; location: string; distance: number; price: number; unit: string; category: string; image: string; rating: number; stock: string };
 
 const products: Product[] = [
-  { id: 1, name: "Tomate maduro", seller: "Rui M.", location: "Maputo", distance: 2, price: 120, unit: "kg", category: "Hortaliças", image: tomatoes, rating: 4.9, stock: "Disponível hoje" },
-  { id: 2, name: "Espinafre fresco", seller: "Ana S.", location: "Matola", distance: 4, price: 45, unit: "molho", category: "Hortaliças", image: spinach, rating: 4.8, stock: "12 molhos" },
-  { id: 3, name: "Batata-doce", seller: "Júlio P.", location: "Boane", distance: 6, price: 60, unit: "kg", category: "Tubérculos", image: sweetPotato, rating: 4.7, stock: "35 kg" },
+  { id: 1, name: "Tomate maduro", seller: "Rui M.", province: "Maputo Cidade", location: "KaMavota", distance: 2, price: 120, unit: "kg", category: "Hortaliças", image: tomatoes, rating: 4.9, stock: "Disponível hoje" },
+  { id: 2, name: "Espinafre fresco", seller: "Ana S.", province: "Maputo Província", location: "Matola", distance: 4, price: 45, unit: "molho", category: "Hortaliças", image: spinach, rating: 4.8, stock: "12 molhos" },
+  { id: 3, name: "Batata-doce", seller: "Júlio P.", province: "Maputo Província", location: "Boane", distance: 6, price: 60, unit: "kg", category: "Tubérculos", image: sweetPotato, rating: 4.7, stock: "35 kg" },
+  { id: 4, name: "Milho branco", seller: "Carlos T.", province: "Manica", location: "Chimoio", distance: 12, price: 35, unit: "kg", category: "Sementes", image: sweetPotato, rating: 4.6, stock: "3 sacos" },
+  { id: 5, name: "Castanha de caju", seller: "Fátima N.", province: "Nampula", location: "Monapo", distance: 18, price: 250, unit: "kg", category: "Frutas", image: tomatoes, rating: 4.9, stock: "50 kg" },
+  { id: 6, name: "Couve manteiga", seller: "Elisa M.", province: "Sofala", location: "Beira", distance: 9, price: 40, unit: "molho", category: "Hortaliças", image: spinach, rating: 4.5, stock: "20 molhos" },
 ];
+
 
 const tabs: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: "mercado", label: "Mercado", icon: Home }, { id: "diagnostico", label: "Diagnóstico", icon: Camera },
