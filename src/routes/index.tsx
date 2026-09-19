@@ -121,7 +121,7 @@ function MachambaApp() {
       </nav>
 
       {selected && <ProductModal product={selected} favorite={favorites.includes(selected.id)} onFavorite={() => toggleFavorite(selected.id)} onClose={() => setSelected(null)} showNotice={showNotice} />}
-      {filtersOpen && <FilterModal category={category} province={province} onCategory={setCategory} onProvince={setProvince} onClose={() => setFiltersOpen(false)} />}
+      {filtersOpen && <FilterModal category={category} province={province} city={city} onCategory={setCategory} onProvince={(value) => { setProvince(value); setCity("Todas"); }} onCity={setCity} onClose={() => setFiltersOpen(false)} />}
       {sellOpen && <SellModal onClose={() => setSellOpen(false)} onDone={() => { setSellOpen(false); showNotice("Anúncio guardado para revisão"); }} />}
       {notice && <div role="status" className="fixed bottom-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-lg bg-foreground px-4 py-3 text-sm font-semibold text-background shadow-lg"><ShieldCheck className="size-4" />{notice}</div>}
     </div>
