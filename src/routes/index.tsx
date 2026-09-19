@@ -92,7 +92,7 @@ function MachambaApp() {
               <span className="grid size-10 place-items-center rounded-lg bg-primary font-display text-lg font-bold text-primary-foreground">M</span>
               <span><strong className="block font-display text-base leading-none">Machamba</strong><span className="text-xs text-muted-foreground">Digital</span></span>
             </button>
-            <AppButton variant="soft" className="min-h-9 rounded-full px-3 text-xs" onClick={() => setFiltersOpen(true)}><MapPin className="size-3.5 text-accent" /> Maputo</AppButton>
+            <AppButton variant="soft" className="min-h-9 max-w-[55%] rounded-full px-3 text-xs" onClick={() => setFiltersOpen(true)}><MapPin className="size-3.5 shrink-0 text-accent" /> <span className="truncate">{city !== "Todas" ? city : province !== "Todas" ? province : "Todo o país"}</span></AppButton>
           </div>
           <div className="mt-3 flex gap-2 md:max-w-xl">
             <div className="relative flex-1">
