@@ -6,4 +6,4 @@
 - [x] Adicionar pesquisa, filtros, favoritos, contacto e publicação
 - [x] Adicionar diagnóstico, mensagens, aprendizagem e perfil
 - [x] Preparar instalação PWA e funcionamento offline básico
-- [ ] Validar compilação e experiência visual
+- [x] Validar compilação e experiência visual

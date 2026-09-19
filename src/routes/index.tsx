@@ -126,7 +126,7 @@ function MarketView({ products: visible, category, setCategory, favorites, toggl
       <div className="relative overflow-hidden rounded-lg bg-primary p-5 text-primary-foreground sm:p-7">
         <span className="text-xs font-bold uppercase text-accent">Oferta do dia</span><h2 className="mt-1 font-display text-2xl font-bold">Tomate maduro</h2>
         <div className="mt-6 flex items-end justify-between"><div><strong className="font-display text-4xl">120</strong><span className="text-sm opacity-75"> MZN / kg</span></div><div className="text-right text-xs opacity-80"><strong className="block text-sm opacity-100">Rui M.</strong>Maputo · 2 km</div></div>
-        <AppButton variant="soft" className="mt-5 w-full bg-background text-primary" onClick={() => setSelected(products[0])}>Ver produto <ChevronRight className="size-4" /></AppButton>
+        <AppButton variant="soft" className="mt-5 w-full bg-background text-primary" onClick={() => { const featured = products[0]; if (featured) setSelected(featured); }}>Ver produto <ChevronRight className="size-4" /></AppButton>
       </div>
       <button onClick={() => setTab("diagnostico")} className="flex min-h-36 items-center gap-4 rounded-lg border border-accent/40 bg-accent/10 p-5 text-left transition-colors hover:bg-accent/15">
         <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground"><Sparkles className="size-6" /></span><span><strong className="font-display text-lg">Avaliar a minha cultura</strong><small className="mt-1 block text-muted-foreground">Tira uma fotografia e recebe orientação.</small></span><ChevronRight className="ml-auto size-5" />
