@@ -74,9 +74,11 @@ function MachambaApp() {
   const filtered = useMemo(() => products.filter((product) => {
     const matchesQuery = product.name.toLowerCase().includes(query.toLowerCase()) || product.seller.toLowerCase().includes(query.toLowerCase());
     const matchesCategory = category === "Todos" || product.category === category;
-    const matchesProvince = province === "Todas" || product.location === province;
-    return matchesQuery && matchesCategory && matchesProvince;
-  }), [query, category, province]);
+    const matchesProvince = province === "Todas" || product.province === province;
+    const matchesCity = city === "Todas" || product.location === city;
+    return matchesQuery && matchesCategory && matchesProvince && matchesCity;
+  }), [query, category, province, city]);
+
 
   const toggleFavorite = (id: number) => setFavorites((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   const showNotice = (message: string) => setNotice(message);
