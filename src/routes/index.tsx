@@ -162,7 +162,7 @@ function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const readFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const readFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
