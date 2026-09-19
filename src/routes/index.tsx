@@ -4,10 +4,12 @@ import {
   Home, MapPin, MessageCircle, PackagePlus, Search, ShieldCheck, SlidersHorizontal,
   Sparkles, Star, Upload, WifiOff, X,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { citiesOf, provinceNames } from "@/lib/mozambique";
 import tomatoes from "@/assets/tomatoes.jpg";
 import spinach from "@/assets/spinach.jpg";
 import sweetPotato from "@/assets/sweet-potato.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,13 +26,17 @@ export const Route = createFileRoute("/")({
 });
 
 type Tab = "mercado" | "diagnostico" | "favoritos" | "mensagens" | "aprender" | "perfil";
-type Product = { id: number; name: string; seller: string; location: string; distance: number; price: number; unit: string; category: string; image: string; rating: number; stock: string };
+type Product = { id: number; name: string; seller: string; province: string; location: string; distance: number; price: number; unit: string; category: string; image: string; rating: number; stock: string };
 
 const products: Product[] = [
-  { id: 1, name: "Tomate maduro", seller: "Rui M.", location: "Maputo", distance: 2, price: 120, unit: "kg", category: "Hortaliças", image: tomatoes, rating: 4.9, stock: "Disponível hoje" },
-  { id: 2, name: "Espinafre fresco", seller: "Ana S.", location: "Matola", distance: 4, price: 45, unit: "molho", category: "Hortaliças", image: spinach, rating: 4.8, stock: "12 molhos" },
-  { id: 3, name: "Batata-doce", seller: "Júlio P.", location: "Boane", distance: 6, price: 60, unit: "kg", category: "Tubérculos", image: sweetPotato, rating: 4.7, stock: "35 kg" },
+  { id: 1, name: "Tomate maduro", seller: "Rui M.", province: "Maputo Cidade", location: "KaMavota", distance: 2, price: 120, unit: "kg", category: "Hortaliças", image: tomatoes, rating: 4.9, stock: "Disponível hoje" },
+  { id: 2, name: "Espinafre fresco", seller: "Ana S.", province: "Maputo Província", location: "Matola", distance: 4, price: 45, unit: "molho", category: "Hortaliças", image: spinach, rating: 4.8, stock: "12 molhos" },
+  { id: 3, name: "Batata-doce", seller: "Júlio P.", province: "Maputo Província", location: "Boane", distance: 6, price: 60, unit: "kg", category: "Tubérculos", image: sweetPotato, rating: 4.7, stock: "35 kg" },
+  { id: 4, name: "Milho branco", seller: "Carlos T.", province: "Manica", location: "Chimoio", distance: 12, price: 35, unit: "kg", category: "Sementes", image: sweetPotato, rating: 4.6, stock: "3 sacos" },
+  { id: 5, name: "Castanha de caju", seller: "Fátima N.", province: "Nampula", location: "Monapo", distance: 18, price: 250, unit: "kg", category: "Frutas", image: tomatoes, rating: 4.9, stock: "50 kg" },
+  { id: 6, name: "Couve manteiga", seller: "Elisa M.", province: "Sofala", location: "Beira", distance: 9, price: 40, unit: "molho", category: "Hortaliças", image: spinach, rating: 4.5, stock: "20 molhos" },
 ];
+
 
 const tabs: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: "mercado", label: "Mercado", icon: Home }, { id: "diagnostico", label: "Diagnóstico", icon: Camera },
@@ -48,6 +54,8 @@ function MachambaApp() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
   const [province, setProvince] = useState("Todas");
+  const [city, setCity] = useState("Todas");
+
   const [favorites, setFavorites] = useState<number[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -66,9 +74,11 @@ function MachambaApp() {
   const filtered = useMemo(() => products.filter((product) => {
     const matchesQuery = product.name.toLowerCase().includes(query.toLowerCase()) || product.seller.toLowerCase().includes(query.toLowerCase());
     const matchesCategory = category === "Todos" || product.category === category;
-    const matchesProvince = province === "Todas" || product.location === province;
-    return matchesQuery && matchesCategory && matchesProvince;
-  }), [query, category, province]);
+    const matchesProvince = province === "Todas" || product.province === province;
+    const matchesCity = city === "Todas" || product.location === city;
+    return matchesQuery && matchesCategory && matchesProvince && matchesCity;
+  }), [query, category, province, city]);
+
 
   const toggleFavorite = (id: number) => setFavorites((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   const showNotice = (message: string) => setNotice(message);
@@ -82,7 +92,7 @@ function MachambaApp() {
               <span className="grid size-10 place-items-center rounded-lg bg-primary font-display text-lg font-bold text-primary-foreground">M</span>
               <span><strong className="block font-display text-base leading-none">Machamba</strong><span className="text-xs text-muted-foreground">Digital</span></span>
             </button>
-            <AppButton variant="soft" className="min-h-9 rounded-full px-3 text-xs" onClick={() => setFiltersOpen(true)}><MapPin className="size-3.5 text-accent" /> Maputo</AppButton>
+            <AppButton variant="soft" className="min-h-9 max-w-[55%] rounded-full px-3 text-xs" onClick={() => setFiltersOpen(true)}><MapPin className="size-3.5 shrink-0 text-accent" /> <span className="truncate">{city !== "Todas" ? city : province !== "Todas" ? province : "Todo o país"}</span></AppButton>
           </div>
           <div className="mt-3 flex gap-2 md:max-w-xl">
             <div className="relative flex-1">
@@ -111,7 +121,7 @@ function MachambaApp() {
       </nav>
 
       {selected && <ProductModal product={selected} favorite={favorites.includes(selected.id)} onFavorite={() => toggleFavorite(selected.id)} onClose={() => setSelected(null)} showNotice={showNotice} />}
-      {filtersOpen && <FilterModal category={category} province={province} onCategory={setCategory} onProvince={setProvince} onClose={() => setFiltersOpen(false)} />}
+      {filtersOpen && <FilterModal category={category} province={province} city={city} onCategory={setCategory} onProvince={(value) => { setProvince(value); setCity("Todas"); }} onCity={setCity} onClose={() => setFiltersOpen(false)} />}
       {sellOpen && <SellModal onClose={() => setSellOpen(false)} onDone={() => { setSellOpen(false); showNotice("Anúncio guardado para revisão"); }} />}
       {notice && <div role="status" className="fixed bottom-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-lg bg-foreground px-4 py-3 text-sm font-semibold text-background shadow-lg"><ShieldCheck className="size-4" />{notice}</div>}
     </div>
@@ -145,15 +155,67 @@ function ProductCard({ product, favorite, onFavorite, onOpen }: { product: Produ
 }
 
 function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }) {
-  const [image, setImage] = useState<string | null>(null); const inputRef = useRef<HTMLInputElement>(null);
+  const [image, setImage] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const readFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { showNotice("Fotografia demasiado grande (máx. 8 MB)"); return; }
+    const reader = new FileReader();
+    reader.onload = () => { setImage(String(reader.result)); showNotice("Fotografia carregada"); };
+    reader.onerror = () => showNotice("Não foi possível ler a fotografia");
+    reader.readAsDataURL(file);
+  };
+
+  const stopLive = () => { streamRef.current?.getTracks().forEach((track) => track.stop()); streamRef.current = null; setLive(false); };
+
+  const openCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+      streamRef.current = stream;
+      setLive(true);
+      window.setTimeout(() => { if (videoRef.current) { videoRef.current.srcObject = stream; void videoRef.current.play(); } }, 0);
+    } catch {
+      if (cameraRef.current) cameraRef.current.click();
+      else showNotice("Câmara indisponível. Escolhe uma fotografia guardada.");
+    }
+  };
+
+  const shoot = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 720;
+    canvas.height = video.videoHeight || 960;
+    canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setImage(canvas.toDataURL("image/jpeg", 0.85));
+    stopLive();
+    showNotice("Fotografia capturada");
+  };
+
+  useEffect(() => () => { streamRef.current?.getTracks().forEach((track) => track.stop()); }, []);
+
   return <section className="mx-auto max-w-2xl animate-enter"><p className="text-xs font-semibold text-primary">SAÚDE DA CULTURA</p><h1 className="mt-1 font-display text-3xl font-bold">Avaliar por fotografia</h1><p className="mt-2 text-sm text-muted-foreground">Fotografa uma folha afetada, com boa luz e sem filtros.</p>
     <div className="mt-6 rounded-lg border border-border bg-card p-4 sm:p-6"><label className="text-sm font-semibold" htmlFor="crop">Qual é a cultura?</label><select id="crop" className="mt-2 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option>Milho</option><option>Tomate</option><option>Mandioca</option><option>Feijão</option><option>Outra</option></select>
-      <input ref={inputRef} className="hidden" type="file" accept="image/*" capture="environment" onChange={(event) => { const file = event.target.files?.[0]; if (file) setImage(URL.createObjectURL(file)); }} />
-      <button onClick={() => inputRef.current?.click()} className="mt-4 grid min-h-52 w-full place-items-center overflow-hidden rounded-lg border-2 border-dashed border-primary/35 bg-secondary/50 text-center">{image ? <img src={image} alt="Fotografia da cultura" className="h-64 w-full object-cover" /> : <span><span className="mx-auto grid size-12 place-items-center rounded-full bg-primary text-primary-foreground"><Camera className="size-6" /></span><strong className="mt-3 block">Tirar ou escolher fotografia</strong><small className="mt-1 block text-muted-foreground">JPG ou PNG · máximo 8 MB</small></span>}</button>
-      <AppButton className="mt-4 w-full" onClick={() => image ? showNotice("Fotografia pronta para análise") : inputRef.current?.click()}><Upload className="size-4" />{image ? "Analisar fotografia" : "Escolher fotografia"}</AppButton>
+      <input ref={cameraRef} className="sr-only" type="file" accept="image/*" capture="environment" onChange={readFile} />
+      <input ref={galleryRef} className="sr-only" type="file" accept="image/*" onChange={readFile} />
+      <button onClick={() => galleryRef.current?.click()} className="mt-4 grid min-h-52 w-full place-items-center overflow-hidden rounded-lg border-2 border-dashed border-primary/35 bg-secondary/50 text-center">{image ? <img src={image} alt="Fotografia da cultura" className="h-64 w-full object-cover" /> : <span><span className="mx-auto grid size-12 place-items-center rounded-full bg-primary text-primary-foreground"><Camera className="size-6" /></span><strong className="mt-3 block">Escolher fotografia do telemóvel</strong><small className="mt-1 block text-muted-foreground">JPG ou PNG · máximo 8 MB</small></span>}</button>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <AppButton variant="outline" onClick={() => { void openCamera(); }}><Camera className="size-4" /> Tirar fotografia</AppButton>
+        <AppButton variant="outline" onClick={() => galleryRef.current?.click()}><Upload className="size-4" /> Carregar fotografia</AppButton>
+      </div>
+      {image && <div className="mt-3 grid gap-3 sm:grid-cols-2"><AppButton className="w-full" onClick={() => showNotice("Fotografia pronta para análise")}><Sparkles className="size-4" /> Analisar fotografia</AppButton><AppButton variant="plain" onClick={() => { setImage(null); showNotice("Fotografia removida"); }}><X className="size-4" /> Remover fotografia</AppButton></div>}
     </div><div className="mt-4 flex gap-3 rounded-lg border border-accent/35 bg-accent/10 p-4"><Sparkles className="size-5 shrink-0 text-accent" /><p className="text-xs leading-relaxed text-muted-foreground"><strong className="text-foreground">Avaliação orientativa.</strong> O resultado não substitui um agrónomo. Casos graves ou de baixa confiança devem ser revistos por um técnico.</p></div>
+    {live && <div className="fixed inset-0 z-50 flex flex-col bg-foreground/95 p-4"><video ref={videoRef} playsInline muted className="min-h-0 flex-1 rounded-lg object-cover" /><div className="mt-4 grid grid-cols-2 gap-3"><AppButton variant="outline" onClick={stopLive}>Cancelar</AppButton><AppButton onClick={shoot}><Camera className="size-4" /> Capturar</AppButton></div></div>}
   </section>;
 }
+
 
 function FavoritesView({ products, toggleFavorite, setSelected, setTab }: { products: Product[]; toggleFavorite: (id: number) => void; setSelected: (product: Product) => void; setTab: (tab: Tab) => void }) { return <section className="animate-enter"><h1 className="font-display text-3xl font-bold">Favoritos</h1><p className="mt-1 text-sm text-muted-foreground">Produtos que guardaste para ver depois.</p>{products.length ? <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{products.map((product) => <ProductCard key={product.id} product={product} favorite onFavorite={() => toggleFavorite(product.id)} onOpen={() => setSelected(product)} />)}</div> : <Empty icon={<Heart className="size-7" />} title="Ainda não guardaste produtos" text="Toca no coração de um anúncio para encontrá-lo aqui." action="Explorar mercado" onAction={() => setTab("mercado")} />}</section>; }
 
@@ -169,6 +231,6 @@ function ModalShell({ title, onClose, children }: { title: string; onClose: () =
 
 function ProductModal({ product, favorite, onFavorite, onClose, showNotice }: { product: Product; favorite: boolean; onFavorite: () => void; onClose: () => void; showNotice: (message: string) => void }) { return <ModalShell title="Detalhes do produto" onClose={onClose}><img src={product.image} alt={product.name} width={816} height={816} className="mt-4 aspect-[16/10] w-full rounded-lg object-cover" /><div className="mt-4 flex items-start justify-between gap-3"><div><p className="text-xs font-bold text-primary">{product.category}</p><h3 className="font-display text-2xl font-bold">{product.name}</h3><p className="text-sm text-muted-foreground">{product.stock}</p></div><strong className="font-display text-xl">{product.price} <small className="font-sans text-xs text-muted-foreground">MZN/{product.unit}</small></strong></div><div className="mt-4 flex items-center justify-between border-y border-border py-4"><div><strong className="text-sm">{product.seller}</strong><p className="text-xs text-muted-foreground"><MapPin className="mr-1 inline size-3" />{product.location} · {product.distance} km</p></div><span className="flex items-center gap-1 text-sm"><Star className="size-4 fill-accent text-accent" />{product.rating}</span></div><div className="mt-4 grid grid-cols-[1fr_auto] gap-2"><AppButton onClick={() => { showNotice("Mensagem enviada ao vendedor"); onClose(); }}><MessageCircle className="size-4" /> Contactar vendedor</AppButton><AppButton variant="outline" className="px-3" ariaLabel="Guardar favorito" onClick={onFavorite}><Heart className={`size-5 ${favorite ? "fill-primary text-primary" : ""}`} /></AppButton></div></ModalShell>; }
 
-function FilterModal({ category, province, onCategory, onProvince, onClose }: { category: string; province: string; onCategory: (value: string) => void; onProvince: (value: string) => void; onClose: () => void }) { return <ModalShell title="Filtrar mercado" onClose={onClose}><div className="mt-5 space-y-4"><label className="block text-sm font-semibold">Categoria<select value={category} onChange={(event) => onCategory(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"><option>Todos</option><option>Hortaliças</option><option>Tubérculos</option><option>Frutas</option><option>Sementes</option><option>Equipamentos</option></select></label><label className="block text-sm font-semibold">Localização<select value={province} onChange={(event) => onProvince(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"><option>Todas</option><option>Maputo</option><option>Matola</option><option>Boane</option></select></label><AppButton className="w-full" onClick={onClose}>Aplicar filtros</AppButton></div></ModalShell>; }
+function FilterModal({ category, province, city, onCategory, onProvince, onCity, onClose }: { category: string; province: string; city: string; onCategory: (value: string) => void; onProvince: (value: string) => void; onCity: (value: string) => void; onClose: () => void }) { const cities = citiesOf(province); return <ModalShell title="Filtrar mercado" onClose={onClose}><div className="mt-5 space-y-4"><label className="block text-sm font-semibold">Categoria<select value={category} onChange={(event) => onCategory(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"><option>Todos</option><option>Hortaliças</option><option>Tubérculos</option><option>Frutas</option><option>Sementes</option><option>Equipamentos</option></select></label><label className="block text-sm font-semibold">Província<select value={province} onChange={(event) => onProvince(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"><option>Todas</option>{provinceNames.map((item) => <option key={item}>{item}</option>)}</select></label><label className="block text-sm font-semibold">Cidade ou distrito<select value={city} disabled={!cities.length} onChange={(event) => onCity(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal disabled:opacity-60"><option>Todas</option>{cities.map((item) => <option key={item}>{item}</option>)}</select>{!cities.length && <small className="mt-1 block text-xs font-normal text-muted-foreground">Escolhe primeiro uma província.</small>}</label><div className="grid grid-cols-2 gap-3"><AppButton variant="outline" onClick={() => { onCategory("Todos"); onProvince("Todas"); onCity("Todas"); }}>Limpar</AppButton><AppButton onClick={onClose}>Aplicar filtros</AppButton></div></div></ModalShell>; }
 
-function SellModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) { return <ModalShell title="Publicar anúncio" onClose={onClose}><form className="mt-5 space-y-4" onSubmit={(event) => { event.preventDefault(); onDone(); }}><label className="block text-sm font-semibold">Nome do produto<input required placeholder="Ex.: Milho branco" className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal" /></label><div className="grid grid-cols-2 gap-3"><label className="block text-sm font-semibold">Preço (MZN)<input required type="number" min="1" placeholder="0" className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal" /></label><label className="block text-sm font-semibold">Unidade<select className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"><option>kg</option><option>saco</option><option>unidade</option><option>molho</option></select></label></div><label className="block text-sm font-semibold">Localização<input required placeholder="Distrito ou província" className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal" /></label><p className="text-xs text-muted-foreground">O anúncio será revisto antes de aparecer no mercado.</p><AppButton type="submit" className="w-full"><PackagePlus className="size-4" /> Enviar para revisão</AppButton></form></ModalShell>; }
+function SellModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) { const [sellProvince, setSellProvince] = useState(""); const cities = citiesOf(sellProvince); return <ModalShell title="Publicar anúncio" onClose={onClose}><form className="mt-5 space-y-4" onSubmit={(event) => { event.preventDefault(); onDone(); }}><label className="block text-sm font-semibold">Nome do produto<input required placeholder="Ex.: Milho branco" className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal" /></label><div className="grid grid-cols-2 gap-3"><label className="block text-sm font-semibold">Preço (MZN)<input required type="number" min="1" placeholder="0" className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal" /></label><label className="block text-sm font-semibold">Unidade<select className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"><option>kg</option><option>saco</option><option>unidade</option><option>molho</option></select></label></div><div className="grid gap-3 sm:grid-cols-2"><label className="block text-sm font-semibold">Província<select required value={sellProvince} onChange={(event) => setSellProvince(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"><option value="">Escolher província</option>{provinceNames.map((item) => <option key={item}>{item}</option>)}</select></label><label className="block text-sm font-semibold">Cidade ou distrito<select required disabled={!cities.length} className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal disabled:opacity-60"><option value="">Escolher cidade</option>{cities.map((item) => <option key={item}>{item}</option>)}</select></label></div><p className="text-xs text-muted-foreground">O anúncio será revisto antes de aparecer no mercado.</p><AppButton type="submit" className="w-full"><PackagePlus className="size-4" /> Enviar para revisão</AppButton></form></ModalShell>; }
