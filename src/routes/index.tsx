@@ -54,6 +54,8 @@ function MachambaApp() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
   const [province, setProvince] = useState("Todas");
+  const [city, setCity] = useState("Todas");
+
   const [favorites, setFavorites] = useState<number[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
