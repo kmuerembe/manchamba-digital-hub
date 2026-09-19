@@ -155,15 +155,67 @@ function ProductCard({ product, favorite, onFavorite, onOpen }: { product: Produ
 }
 
 function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }) {
-  const [image, setImage] = useState<string | null>(null); const inputRef = useRef<HTMLInputElement>(null);
+  const [image, setImage] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const readFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { showNotice("Fotografia demasiado grande (máx. 8 MB)"); return; }
+    const reader = new FileReader();
+    reader.onload = () => { setImage(String(reader.result)); showNotice("Fotografia carregada"); };
+    reader.onerror = () => showNotice("Não foi possível ler a fotografia");
+    reader.readAsDataURL(file);
+  };
+
+  const stopLive = () => { streamRef.current?.getTracks().forEach((track) => track.stop()); streamRef.current = null; setLive(false); };
+
+  const openCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+      streamRef.current = stream;
+      setLive(true);
+      window.setTimeout(() => { if (videoRef.current) { videoRef.current.srcObject = stream; void videoRef.current.play(); } }, 0);
+    } catch {
+      if (cameraRef.current) cameraRef.current.click();
+      else showNotice("Câmara indisponível. Escolhe uma fotografia guardada.");
+    }
+  };
+
+  const shoot = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 720;
+    canvas.height = video.videoHeight || 960;
+    canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setImage(canvas.toDataURL("image/jpeg", 0.85));
+    stopLive();
+    showNotice("Fotografia capturada");
+  };
+
+  useEffect(() => () => { streamRef.current?.getTracks().forEach((track) => track.stop()); }, []);
+
   return <section className="mx-auto max-w-2xl animate-enter"><p className="text-xs font-semibold text-primary">SAÚDE DA CULTURA</p><h1 className="mt-1 font-display text-3xl font-bold">Avaliar por fotografia</h1><p className="mt-2 text-sm text-muted-foreground">Fotografa uma folha afetada, com boa luz e sem filtros.</p>
     <div className="mt-6 rounded-lg border border-border bg-card p-4 sm:p-6"><label className="text-sm font-semibold" htmlFor="crop">Qual é a cultura?</label><select id="crop" className="mt-2 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option>Milho</option><option>Tomate</option><option>Mandioca</option><option>Feijão</option><option>Outra</option></select>
-      <input ref={inputRef} className="hidden" type="file" accept="image/*" capture="environment" onChange={(event) => { const file = event.target.files?.[0]; if (file) setImage(URL.createObjectURL(file)); }} />
-      <button onClick={() => inputRef.current?.click()} className="mt-4 grid min-h-52 w-full place-items-center overflow-hidden rounded-lg border-2 border-dashed border-primary/35 bg-secondary/50 text-center">{image ? <img src={image} alt="Fotografia da cultura" className="h-64 w-full object-cover" /> : <span><span className="mx-auto grid size-12 place-items-center rounded-full bg-primary text-primary-foreground"><Camera className="size-6" /></span><strong className="mt-3 block">Tirar ou escolher fotografia</strong><small className="mt-1 block text-muted-foreground">JPG ou PNG · máximo 8 MB</small></span>}</button>
-      <AppButton className="mt-4 w-full" onClick={() => image ? showNotice("Fotografia pronta para análise") : inputRef.current?.click()}><Upload className="size-4" />{image ? "Analisar fotografia" : "Escolher fotografia"}</AppButton>
+      <input ref={cameraRef} className="sr-only" type="file" accept="image/*" capture="environment" onChange={readFile} />
+      <input ref={galleryRef} className="sr-only" type="file" accept="image/*" onChange={readFile} />
+      <button onClick={() => galleryRef.current?.click()} className="mt-4 grid min-h-52 w-full place-items-center overflow-hidden rounded-lg border-2 border-dashed border-primary/35 bg-secondary/50 text-center">{image ? <img src={image} alt="Fotografia da cultura" className="h-64 w-full object-cover" /> : <span><span className="mx-auto grid size-12 place-items-center rounded-full bg-primary text-primary-foreground"><Camera className="size-6" /></span><strong className="mt-3 block">Escolher fotografia do telemóvel</strong><small className="mt-1 block text-muted-foreground">JPG ou PNG · máximo 8 MB</small></span>}</button>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <AppButton variant="outline" onClick={() => { void openCamera(); }}><Camera className="size-4" /> Tirar fotografia</AppButton>
+        <AppButton variant="outline" onClick={() => galleryRef.current?.click()}><Upload className="size-4" /> Carregar fotografia</AppButton>
+      </div>
+      {image && <div className="mt-3 grid gap-3 sm:grid-cols-2"><AppButton className="w-full" onClick={() => showNotice("Fotografia pronta para análise")}><Sparkles className="size-4" /> Analisar fotografia</AppButton><AppButton variant="plain" onClick={() => { setImage(null); showNotice("Fotografia removida"); }}><X className="size-4" /> Remover fotografia</AppButton></div>}
     </div><div className="mt-4 flex gap-3 rounded-lg border border-accent/35 bg-accent/10 p-4"><Sparkles className="size-5 shrink-0 text-accent" /><p className="text-xs leading-relaxed text-muted-foreground"><strong className="text-foreground">Avaliação orientativa.</strong> O resultado não substitui um agrónomo. Casos graves ou de baixa confiança devem ser revistos por um técnico.</p></div>
+    {live && <div className="fixed inset-0 z-50 flex flex-col bg-foreground/95 p-4"><video ref={videoRef} playsInline muted className="min-h-0 flex-1 rounded-lg object-cover" /><div className="mt-4 grid grid-cols-2 gap-3"><AppButton variant="outline" onClick={stopLive}>Cancelar</AppButton><AppButton onClick={shoot}><Camera className="size-4" /> Capturar</AppButton></div></div>}
   </section>;
 }
+
 
 function FavoritesView({ products, toggleFavorite, setSelected, setTab }: { products: Product[]; toggleFavorite: (id: number) => void; setSelected: (product: Product) => void; setTab: (tab: Tab) => void }) { return <section className="animate-enter"><h1 className="font-display text-3xl font-bold">Favoritos</h1><p className="mt-1 text-sm text-muted-foreground">Produtos que guardaste para ver depois.</p>{products.length ? <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{products.map((product) => <ProductCard key={product.id} product={product} favorite onFavorite={() => toggleFavorite(product.id)} onOpen={() => setSelected(product)} />)}</div> : <Empty icon={<Heart className="size-7" />} title="Ainda não guardaste produtos" text="Toca no coração de um anúncio para encontrá-lo aqui." action="Explorar mercado" onAction={() => setTab("mercado")} />}</section>; }
 
