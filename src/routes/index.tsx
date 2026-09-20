@@ -245,6 +245,20 @@ function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }
   </section>;
 }
 
+function DiagnosisResult({ result }: { result: CropDiagnosis }) {
+  const severityLabel = { saudavel: "Cultura saudável", ligeira: "Problema ligeiro", moderada: "Problema moderado", grave: "Problema grave" }[result.gravidade];
+  const severityStyle = result.gravidade === "saudavel" ? "bg-primary/10 text-primary" : result.gravidade === "ligeira" ? "bg-accent/15 text-accent" : "bg-destructive/10 text-destructive";
+  const confidenceLabel = { baixa: "Confiança baixa", media: "Confiança média", alta: "Confiança alta" }[result.confianca];
+  return <div className="mt-4 animate-enter rounded-lg border border-border bg-card p-5">
+    <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-3 py-1 text-xs font-bold ${severityStyle}`}>{severityLabel}</span><span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-muted-foreground">{confidenceLabel}</span></div>
+    <h2 className="mt-3 font-display text-xl font-bold">{result.diagnostico}</h2>
+    <p className="mt-1 text-sm text-muted-foreground">Cultura identificada: <strong className="text-foreground">{result.cultura_identificada}</strong></p>
+    <p className="mt-3 text-sm leading-relaxed">{result.sinais_vistos}</p>
+    <h3 className="mt-4 flex items-center gap-2 font-display font-semibold"><Leaf className="size-4 text-primary" /> O que fazer</h3>
+    <ul className="mt-2 space-y-2">{result.conselhos.map((conselho) => <li key={conselho} className="flex gap-2 text-sm"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />{conselho}</li>)}</ul>
+  </div>;
+}
+
 
 function FavoritesView({ products, toggleFavorite, setSelected, setTab }: { products: Product[]; toggleFavorite: (id: number) => void; setSelected: (product: Product) => void; setTab: (tab: Tab) => void }) { return <section className="animate-enter"><h1 className="font-display text-3xl font-bold">Favoritos</h1><p className="mt-1 text-sm text-muted-foreground">Produtos que guardaste para ver depois.</p>{products.length ? <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{products.map((product) => <ProductCard key={product.id} product={product} favorite onFavorite={() => toggleFavorite(product.id)} onOpen={() => setSelected(product)} />)}</div> : <Empty icon={<Heart className="size-7" />} title="Ainda não guardaste produtos" text="Toca no coração de um anúncio para encontrá-lo aqui." action="Explorar mercado" onAction={() => setTab("mercado")} />}</section>; }
 
