@@ -233,8 +233,12 @@ function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }
         <AppButton variant="outline" onClick={() => { void openCamera(); }}><Camera className="size-4" /> Tirar fotografia</AppButton>
         <AppButton variant="outline" onClick={() => galleryRef.current?.click()}><Upload className="size-4" /> Carregar fotografia</AppButton>
       </div>
-      {image && <div className="mt-3 grid gap-3 sm:grid-cols-2"><AppButton className="w-full" onClick={() => showNotice("Fotografia pronta para análise")}><Sparkles className="size-4" /> Analisar fotografia</AppButton><AppButton variant="plain" onClick={() => { setImage(null); showNotice("Fotografia removida"); }}><X className="size-4" /> Remover fotografia</AppButton></div>}
-    </div><div className="mt-4 flex gap-3 rounded-lg border border-accent/35 bg-accent/10 p-4"><Sparkles className="size-5 shrink-0 text-accent" /><p className="text-xs leading-relaxed text-muted-foreground"><strong className="text-foreground">Avaliação orientativa.</strong> O resultado não substitui um agrónomo. Casos graves ou de baixa confiança devem ser revistos por um técnico.</p></div>
+      {image && <div className="mt-3 grid gap-3 sm:grid-cols-2"><AppButton className="w-full" onClick={() => { void analyze(); }}>{analyzing ? <><Loader2 className="size-4 animate-spin" /> A analisar...</> : <><Sparkles className="size-4" /> Analisar fotografia</>}</AppButton><AppButton variant="plain" onClick={clearPhoto}><X className="size-4" /> Remover fotografia</AppButton></div>}
+      {error && <p role="alert" className="mt-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+    </div>
+    {analyzing && <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-card p-4"><Loader2 className="size-5 animate-spin text-primary" /><p className="text-sm text-muted-foreground">A IA está a observar a tua fotografia. Isto pode demorar alguns segundos.</p></div>}
+    {result && !analyzing && <DiagnosisResult result={result} />}
+    <div className="mt-4 flex gap-3 rounded-lg border border-accent/35 bg-accent/10 p-4"><Sparkles className="size-5 shrink-0 text-accent" /><p className="text-xs leading-relaxed text-muted-foreground"><strong className="text-foreground">Avaliação orientativa.</strong> O resultado não substitui um agrónomo. Casos graves ou de baixa confiança devem ser revistos por um técnico.</p></div>
     {live && <div className="fixed inset-0 z-50 flex flex-col bg-foreground/95 p-4"><video ref={videoRef} playsInline muted className="min-h-0 flex-1 rounded-lg object-cover" /><div className="mt-4 grid grid-cols-2 gap-3"><AppButton variant="outline" onClick={stopLive}>Cancelar</AppButton><AppButton onClick={shoot}><Camera className="size-4" /> Capturar</AppButton></div></div>}
   </section>;
 }
