@@ -2,10 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   Bell, BookOpen, Camera, ChevronRight, CircleUserRound, Clock3, Heart,
   Home, MapPin, MessageCircle, PackagePlus, Search, ShieldCheck, SlidersHorizontal,
-  Sparkles, Star, Upload, WifiOff, X,
+  Leaf, Loader2, Sparkles, Star, Upload, WifiOff, X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { citiesOf, provinceNames } from "@/lib/mozambique";
+import { analyzeCropPhoto, type CropDiagnosis } from "@/lib/ai.functions";
 import tomatoes from "@/assets/tomatoes.jpg";
 import spinach from "@/assets/spinach.jpg";
 import sweetPotato from "@/assets/sweet-potato.jpg";
