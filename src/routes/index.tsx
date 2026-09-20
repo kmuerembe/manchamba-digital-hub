@@ -206,8 +206,26 @@ function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }
 
   useEffect(() => () => { streamRef.current?.getTracks().forEach((track) => track.stop()); }, []);
 
+  const analyze = async () => {
+    if (!image || analyzing) return;
+    setAnalyzing(true);
+    setError(null);
+    setResult(null);
+    try {
+      const diagnosis = await analyzeCropPhoto({ data: { crop, image } });
+      setResult(diagnosis);
+      showNotice("Análise concluída");
+    } catch {
+      setError("Não foi possível analisar a fotografia agora. Verifica a tua ligação e tenta de novo.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const clearPhoto = () => { setImage(null); setResult(null); setError(null); showNotice("Fotografia removida"); };
+
   return <section className="mx-auto max-w-2xl animate-enter"><p className="text-xs font-semibold text-primary">SAÚDE DA CULTURA</p><h1 className="mt-1 font-display text-3xl font-bold">Avaliar por fotografia</h1><p className="mt-2 text-sm text-muted-foreground">Fotografa uma folha afetada, com boa luz e sem filtros.</p>
-    <div className="mt-6 rounded-lg border border-border bg-card p-4 sm:p-6"><label className="text-sm font-semibold" htmlFor="crop">Qual é a cultura?</label><select id="crop" className="mt-2 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option>Milho</option><option>Tomate</option><option>Mandioca</option><option>Feijão</option><option>Outra</option></select>
+    <div className="mt-6 rounded-lg border border-border bg-card p-4 sm:p-6"><label className="text-sm font-semibold" htmlFor="crop">Qual é a cultura?</label><select id="crop" value={crop} onChange={(event) => setCrop(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option>Milho</option><option>Tomate</option><option>Mandioca</option><option>Feijão</option><option>Outra</option></select>
       <input ref={cameraRef} className="sr-only" type="file" accept="image/*" capture="environment" onChange={readFile} />
       <input ref={galleryRef} className="sr-only" type="file" accept="image/*" onChange={readFile} />
       <button onClick={() => galleryRef.current?.click()} className="mt-4 grid min-h-52 w-full place-items-center overflow-hidden rounded-lg border-2 border-dashed border-primary/35 bg-secondary/50 text-center">{image ? <img src={image} alt="Fotografia da cultura" className="h-64 w-full object-cover" /> : <span><span className="mx-auto grid size-12 place-items-center rounded-full bg-primary text-primary-foreground"><Camera className="size-6" /></span><strong className="mt-3 block">Escolher fotografia do telemóvel</strong><small className="mt-1 block text-muted-foreground">JPG ou PNG · máximo 8 MB</small></span>}</button>
