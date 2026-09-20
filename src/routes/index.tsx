@@ -157,6 +157,10 @@ function ProductCard({ product, favorite, onFavorite, onOpen }: { product: Produ
 
 function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }) {
   const [image, setImage] = useState<string | null>(null);
+  const [crop, setCrop] = useState("Milho");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [result, setResult] = useState<CropDiagnosis | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState(false);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
