@@ -173,7 +173,7 @@ function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }
     if (!file) return;
     if (file.size > 8 * 1024 * 1024) { showNotice("Fotografia demasiado grande (máx. 8 MB)"); return; }
     const reader = new FileReader();
-    reader.onload = () => { setImage(String(reader.result)); showNotice("Fotografia carregada"); };
+    reader.onload = () => { setImage(String(reader.result)); setResult(null); setError(null); showNotice("Fotografia carregada"); };
     reader.onerror = () => showNotice("Não foi possível ler a fotografia");
     reader.readAsDataURL(file);
   };
@@ -200,6 +200,8 @@ function DiagnosisView({ showNotice }: { showNotice: (message: string) => void }
     canvas.height = video.videoHeight || 960;
     canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
     setImage(canvas.toDataURL("image/jpeg", 0.85));
+    setResult(null);
+    setError(null);
     stopLive();
     showNotice("Fotografia capturada");
   };
