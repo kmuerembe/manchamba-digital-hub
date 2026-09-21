@@ -72,7 +72,15 @@ export type Database = {
           revisao_nota?: string | null
           utilizador_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "analises_utilizador_fk"
+            columns: ["utilizador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       artigos: {
         Row: {
@@ -108,7 +116,15 @@ export type Database = {
           slug?: string
           titulo?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "artigos_autor_fk"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       avaliacoes: {
         Row: {
@@ -135,7 +151,22 @@ export type Database = {
           estrelas?: number
           id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_avaliado_fk"
+            columns: ["avaliado_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_avaliador_fk"
+            columns: ["avaliador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categorias: {
         Row: {
@@ -200,6 +231,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "conversas_p1_fk"
+            columns: ["participante1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversas_p2_fk"
+            columns: ["participante2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "conversas_produto_id_fkey"
             columns: ["produto_id"]
             isOneToOne: false
@@ -241,6 +286,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "denuncias_denunciante_fk"
+            columns: ["denunciante_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "denuncias_produto_id_fkey"
             columns: ["produto_id"]
             isOneToOne: false
@@ -274,6 +326,13 @@ export type Database = {
             columns: ["produto_id"]
             isOneToOne: false
             referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favoritos_utilizador_fk"
+            columns: ["utilizador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -312,6 +371,20 @@ export type Database = {
             columns: ["conversa_id"]
             isOneToOne: false
             referencedRelation: "conversas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mensagens_destinatario_fk"
+            columns: ["destinatario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mensagens_remetente_fk"
+            columns: ["remetente_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -453,6 +526,13 @@ export type Database = {
             referencedRelation: "categorias"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "produtos_vendedor_fk"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -516,7 +596,15 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_perfil_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

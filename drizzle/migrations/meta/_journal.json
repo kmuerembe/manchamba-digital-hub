@@ -15,6 +15,13 @@
       "when": 1789974732413,
       "tag": "0001_storage_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789974766607,
+      "tag": "0002_chaves_para_perfis",
+      "breakpoints": true
     }
   ]
 }
