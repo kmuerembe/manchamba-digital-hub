@@ -1,0 +1,12 @@
+alter table public.produtos add constraint produtos_vendedor_fk foreign key (vendedor_id) references public.profiles(id) on delete cascade;
+alter table public.favoritos add constraint favoritos_utilizador_fk foreign key (utilizador_id) references public.profiles(id) on delete cascade;
+alter table public.conversas add constraint conversas_p1_fk foreign key (participante1_id) references public.profiles(id) on delete cascade;
+alter table public.conversas add constraint conversas_p2_fk foreign key (participante2_id) references public.profiles(id) on delete cascade;
+alter table public.mensagens add constraint mensagens_remetente_fk foreign key (remetente_id) references public.profiles(id) on delete cascade;
+alter table public.mensagens add constraint mensagens_destinatario_fk foreign key (destinatario_id) references public.profiles(id) on delete cascade;
+alter table public.avaliacoes add constraint avaliacoes_avaliador_fk foreign key (avaliador_id) references public.profiles(id) on delete cascade;
+alter table public.avaliacoes add constraint avaliacoes_avaliado_fk foreign key (avaliado_id) references public.profiles(id) on delete cascade;
+alter table public.analises_cultura add constraint analises_utilizador_fk foreign key (utilizador_id) references public.profiles(id) on delete cascade;
+alter table public.denuncias add constraint denuncias_denunciante_fk foreign key (denunciante_id) references public.profiles(id) on delete cascade;
+alter table public.artigos add constraint artigos_autor_fk foreign key (autor_id) references public.profiles(id) on delete set null;
+alter table public.user_roles add constraint user_roles_perfil_fk foreign key (user_id) references public.profiles(id) on delete cascade;
