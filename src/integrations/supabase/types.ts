@@ -14,16 +14,525 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analises_cultura: {
+        Row: {
+          confianca: number | null
+          criado_em: string
+          cultura: string | null
+          descricao: string | null
+          diagnostico: string | null
+          estado: string
+          foto_url: string | null
+          gravidade: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          produtos_sugeridos: Json
+          provincia: string | null
+          recomendacao: string | null
+          revisado_por_id: string | null
+          revisao_nota: string | null
+          utilizador_id: string
+        }
+        Insert: {
+          confianca?: number | null
+          criado_em?: string
+          cultura?: string | null
+          descricao?: string | null
+          diagnostico?: string | null
+          estado?: string
+          foto_url?: string | null
+          gravidade?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          produtos_sugeridos?: Json
+          provincia?: string | null
+          recomendacao?: string | null
+          revisado_por_id?: string | null
+          revisao_nota?: string | null
+          utilizador_id: string
+        }
+        Update: {
+          confianca?: number | null
+          criado_em?: string
+          cultura?: string | null
+          descricao?: string | null
+          diagnostico?: string | null
+          estado?: string
+          foto_url?: string | null
+          gravidade?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          produtos_sugeridos?: Json
+          provincia?: string | null
+          recomendacao?: string | null
+          revisado_por_id?: string | null
+          revisao_nota?: string | null
+          utilizador_id?: string
+        }
+        Relationships: []
+      }
+      artigos: {
+        Row: {
+          autor_id: string | null
+          conteudo: string | null
+          criado_em: string
+          id: string
+          imagem_url: string | null
+          publicado: boolean
+          resumo: string | null
+          slug: string
+          titulo: string
+        }
+        Insert: {
+          autor_id?: string | null
+          conteudo?: string | null
+          criado_em?: string
+          id?: string
+          imagem_url?: string | null
+          publicado?: boolean
+          resumo?: string | null
+          slug: string
+          titulo: string
+        }
+        Update: {
+          autor_id?: string | null
+          conteudo?: string | null
+          criado_em?: string
+          id?: string
+          imagem_url?: string | null
+          publicado?: boolean
+          resumo?: string | null
+          slug?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
+      avaliacoes: {
+        Row: {
+          avaliado_id: string
+          avaliador_id: string
+          comentario: string | null
+          criado_em: string
+          estrelas: number
+          id: string
+        }
+        Insert: {
+          avaliado_id: string
+          avaliador_id: string
+          comentario?: string | null
+          criado_em?: string
+          estrelas: number
+          id?: string
+        }
+        Update: {
+          avaliado_id?: string
+          avaliador_id?: string
+          comentario?: string | null
+          criado_em?: string
+          estrelas?: number
+          id?: string
+        }
+        Relationships: []
+      }
+      categorias: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number
+          slug: string
+          tipo: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          slug: string
+          tipo?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          slug?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
+      conversas: {
+        Row: {
+          criado_em: string
+          id: string
+          participante1_id: string
+          participante2_id: string
+          produto_id: string | null
+          ultima_mensagem: string | null
+          ultima_mensagem_em: string | null
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          participante1_id: string
+          participante2_id: string
+          produto_id?: string | null
+          ultima_mensagem?: string | null
+          ultima_mensagem_em?: string | null
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          participante1_id?: string
+          participante2_id?: string
+          produto_id?: string | null
+          ultima_mensagem?: string | null
+          ultima_mensagem_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      denuncias: {
+        Row: {
+          criado_em: string
+          denunciante_id: string
+          descricao: string | null
+          estado: string
+          id: string
+          motivo: string
+          produto_id: string | null
+          resolucao: string | null
+        }
+        Insert: {
+          criado_em?: string
+          denunciante_id: string
+          descricao?: string | null
+          estado?: string
+          id?: string
+          motivo: string
+          produto_id?: string | null
+          resolucao?: string | null
+        }
+        Update: {
+          criado_em?: string
+          denunciante_id?: string
+          descricao?: string | null
+          estado?: string
+          id?: string
+          motivo?: string
+          produto_id?: string | null
+          resolucao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "denuncias_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favoritos: {
+        Row: {
+          criado_em: string
+          id: string
+          produto_id: string
+          utilizador_id: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          produto_id: string
+          utilizador_id: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          produto_id?: string
+          utilizador_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favoritos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mensagens: {
+        Row: {
+          conteudo: string
+          conversa_id: string
+          criado_em: string
+          destinatario_id: string
+          id: string
+          lida: boolean
+          remetente_id: string
+        }
+        Insert: {
+          conteudo: string
+          conversa_id: string
+          criado_em?: string
+          destinatario_id: string
+          id?: string
+          lida?: boolean
+          remetente_id: string
+        }
+        Update: {
+          conteudo?: string
+          conversa_id?: string
+          criado_em?: string
+          destinatario_id?: string
+          id?: string
+          lida?: boolean
+          remetente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "conversas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notificacoes: {
+        Row: {
+          criado_em: string
+          id: string
+          lida: boolean
+          link: string | null
+          mensagem: string | null
+          tipo: string
+          titulo: string
+          utilizador_id: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          lida?: boolean
+          link?: string | null
+          mensagem?: string | null
+          tipo: string
+          titulo: string
+          utilizador_id: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          lida?: boolean
+          link?: string | null
+          mensagem?: string | null
+          tipo?: string
+          titulo?: string
+          utilizador_id?: string
+        }
+        Relationships: []
+      }
+      produto_fotos: {
+        Row: {
+          id: string
+          ordem: number
+          produto_id: string
+          url: string
+        }
+        Insert: {
+          id?: string
+          ordem?: number
+          produto_id: string
+          url: string
+        }
+        Update: {
+          id?: string
+          ordem?: number
+          produto_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_fotos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtos: {
+        Row: {
+          atualizado_em: string
+          bairro: string | null
+          categoria_id: string | null
+          criado_em: string
+          descricao: string | null
+          destaque: boolean
+          distrito: string | null
+          estado: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          moeda: string
+          negociavel: boolean
+          preco: number
+          provincia: string | null
+          quantidade: number | null
+          titulo: string
+          unidade: string
+          vendedor_id: string
+          visualizacoes: number
+        }
+        Insert: {
+          atualizado_em?: string
+          bairro?: string | null
+          categoria_id?: string | null
+          criado_em?: string
+          descricao?: string | null
+          destaque?: boolean
+          distrito?: string | null
+          estado?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          moeda?: string
+          negociavel?: boolean
+          preco: number
+          provincia?: string | null
+          quantidade?: number | null
+          titulo: string
+          unidade?: string
+          vendedor_id: string
+          visualizacoes?: number
+        }
+        Update: {
+          atualizado_em?: string
+          bairro?: string | null
+          categoria_id?: string | null
+          criado_em?: string
+          descricao?: string | null
+          destaque?: boolean
+          distrito?: string | null
+          estado?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          moeda?: string
+          negociavel?: boolean
+          preco?: number
+          provincia?: string | null
+          quantidade?: number | null
+          titulo?: string
+          unidade?: string
+          vendedor_id?: string
+          visualizacoes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          ativo: boolean
+          criado_em: string
+          distrito: string | null
+          email: string | null
+          foto_perfil: string | null
+          id: string
+          nome: string
+          provincia: string | null
+          sou_agronomo: boolean
+          telefone: string | null
+          tipo: string
+          verificado: boolean
+        }
+        Insert: {
+          ativo?: boolean
+          criado_em?: string
+          distrito?: string | null
+          email?: string | null
+          foto_perfil?: string | null
+          id: string
+          nome?: string
+          provincia?: string | null
+          sou_agronomo?: boolean
+          telefone?: string | null
+          tipo?: string
+          verificado?: boolean
+        }
+        Update: {
+          ativo?: boolean
+          criado_em?: string
+          distrito?: string | null
+          email?: string | null
+          foto_perfil?: string | null
+          id?: string
+          nome?: string
+          provincia?: string | null
+          sou_agronomo?: boolean
+          telefone?: string | null
+          tipo?: string
+          verificado?: boolean
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderador" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +659,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderador", "user"],
+    },
   },
 } as const
