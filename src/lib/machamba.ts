@@ -232,14 +232,14 @@ export async function listarMensagens(conversaId: string): Promise<Mensagem[]> {
 
 /** Encontra a conversa existente para este produto e par de utilizadores, ou cria uma. */
 export async function abrirConversa(euId: string, outroId: string, produtoId: string | null): Promise<string> {
-  const existente = await supabase
+  let procura = supabase
     .from("conversas")
     .select("id")
     .or(
       `and(participante1_id.eq.${euId},participante2_id.eq.${outroId}),and(participante1_id.eq.${outroId},participante2_id.eq.${euId})`,
-    )
-    .eq("produto_id", produtoId ?? "")
-    .maybeSingle();
+    );
+  procura = produtoId ? procura.eq("produto_id", produtoId) : procura.is("produto_id", null);
+  const existente = await procura.limit(1).maybeSingle();
 
   if (existente.data?.id) return existente.data.id;
 
