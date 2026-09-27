@@ -128,12 +128,9 @@ export function ProfileView({
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         {admin && (
-          <Link
-            to="/admin"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:border-primary"
-          >
-            <ShieldCheck className="size-4" /> Administração
-          </Link>
+          <span className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-muted-foreground">
+            <ShieldCheck className="size-4" /> Conta de administração
+          </span>
         )}
         <AppButton
           variant="plain"
