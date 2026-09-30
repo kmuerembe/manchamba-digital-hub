@@ -42,7 +42,7 @@ O painel fica em **`/admin`** (atalho na página *Conta* para contas com o papel
 
 | Área | O que faz |
 | --- | --- |
-| Resumo | Receita paga, encomendas, utilizadores e vendedores, gráfico de encomendas/receita dos últimos 14 dias, pagamentos por operadora, categorias com mais anúncios e lista do que precisa de atenção. |
+| Resumo | Receita paga, encomendas, utilizadores e vendedores, gráfico de encomendas/receita dos últimos 14 dias, pagamentos por operadora, categorias com mais anúncios, lista do que precisa de atenção e **estado da instalação**. |
 | Aprovações | Revê os anúncios `pendente` e aprova, rejeita, destaca ou ajusta stock (o vendedor recebe notificação). |
 | Encomendas | Todas as encomendas com dados de entrega, artigos, pagamentos e mudança de estado. |
 | Utilizadores | Procura contas, vê nº de anúncios/encomendas e dá ou retira o papel de administrador, verifica e activa contas. |
@@ -52,6 +52,22 @@ O painel fica em **`/admin`** (atalho na página *Conta* para contas com o papel
 
 Alterações de papéis passam por server functions (`src/lib/admin.functions.ts`) que validam o papel de
 administrador e escrevem com o service role — `user_roles` não permite escrita directa pelo cliente.
+
+### Estado da instalação
+
+No fim do resumo, o bloco **Estado da instalação** diz o que ainda falta configurar no projecto:
+
+| Verificação | O que denuncia |
+| --- | --- |
+| Baldes de fotografias | `produtos`/`diagnosticos` em falta no storage — correr a migração `0004_storage_baldes.sql`. |
+| Chave de serviço | `SUPABASE_SERVICE_ROLE_KEY` ausente: sem ela não há encomendas, pagamentos nem alterações de papéis. |
+| M-Pesa e e-Mola | Credenciais em falta; quando a simulação está ligada, avisa que os pagamentos se confirmam sozinhos. |
+| Categorias de produtos | Sem categorias activas ninguém consegue publicar anúncios. |
+| Administradores | Quantas contas têm o papel `admin` (e o que fazer se forem zero). |
+| Diagnóstico de culturas | `LOVABLE_API_KEY` ausente desliga a análise de fotografias. |
+
+A verificação corre no servidor (`estadoInstalacao` em `src/lib/admin.functions.ts`) e devolve apenas
+estados e textos — nunca valores de chaves ou segredos.
 
 ### Dar o primeiro administrador
 
