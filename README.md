@@ -13,6 +13,7 @@ Marketplace estilo AliExpress para Moçambique: qualquer pessoa pode abrir loja,
 | Pagamentos | **M-Pesa** (API oficial Vodacom, C2B single stage + consulta de estado) e **e-Mola** (gateway BCCS da Movitel, `pushUssdMessage` + callback assíncrono). USSD push → cliente confirma PIN → encomenda fica paga, stock baixa, vendedor é notificado. |
 | Encomendas | Lista e detalhe com histórico de pagamentos em tempo real (Supabase Realtime), repetir pagamento, cancelar. |
 | Vendedor | Painel com vendas pagas, dados de entrega do cliente, actualização de estado por artigo (confirmado → enviado → entregue), gestão de stock, publicação com várias fotografias. |
+| Administração | Painel em `/admin` com resumo e gráficos (encomendas, receita, pagamentos móveis, categorias), aprovação de anúncios, encomendas, utilizadores (dar/retirar admin), categorias, denúncias e artigos. |
 | Extras herdados | Diagnóstico de culturas por IA, mensagens em tempo real, favoritos, artigos “Aprender”. |
 
 ## Configurar os pagamentos
@@ -34,6 +35,36 @@ Copia `.env.example` e preenche as variáveis. Sem credenciais, em desenvolvimen
 2. Preenche `EMOLA_URL`, `EMOLA_USERNAME`, `EMOLA_PASSWORD`, `EMOLA_PARTNER_CODE`, `EMOLA_KEY`.
 3. Regista o callback `https://<o-teu-dominio>/api/pagamentos/emola-callback` (opcionalmente protegido com `EMOLA_CALLBACK_SECRET`).
 4. Respostas `0` = pago, `22` = a processar (aguarda callback/consulta), `11` = tempo esgotado.
+
+## Painel de administração
+
+O painel fica em **`/admin`** (atalho na página *Conta* para contas com o papel `admin`). Tem sete áreas:
+
+| Área | O que faz |
+| --- | --- |
+| Resumo | Receita paga, encomendas, utilizadores e vendedores, gráfico de encomendas/receita dos últimos 14 dias, pagamentos por operadora, categorias com mais anúncios e lista do que precisa de atenção. |
+| Aprovações | Revê os anúncios `pendente` e aprova, rejeita, destaca ou ajusta stock (o vendedor recebe notificação). |
+| Encomendas | Todas as encomendas com dados de entrega, artigos, pagamentos e mudança de estado. |
+| Utilizadores | Procura contas, vê nº de anúncios/encomendas e dá ou retira o papel de administrador, verifica e activa contas. |
+| Categorias | Cria, edita e apaga categorias (nome, slug, tipo, ícone, cor, ordem e visibilidade). |
+| Denúncias | Trata queixas: pôr em análise, resolver com nota ou arquivar. |
+| Artigos | Escreve e publica (ou deixa como rascunho) os conteúdos da secção *Aprender*. |
+
+Alterações de papéis passam por server functions (`src/lib/admin.functions.ts`) que validam o papel de
+administrador e escrevem com o service role — `user_roles` não permite escrita directa pelo cliente.
+
+### Dar o primeiro administrador
+
+O painel só é acessível a quem tenha o papel `admin`. Numa conta nova, atribui-o uma vez pelo SQL
+editor do Supabase:
+
+```sql
+insert into public.user_roles (user_id, role)
+select id, 'admin' from public.profiles where email = 'o-teu-email@exemplo.mz'
+on conflict do nothing;
+```
+
+Depois disso, o próprio painel (aba *Utilizadores*) já permite dar e retirar acesso a mais contas.
 
 ## Base de dados
 

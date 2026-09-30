@@ -1,5 +1,14 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { BookOpen, Camera, ChevronRight, Heart, MessageCircle, Package, Store } from "lucide-react";
+import {
+  BookOpen,
+  Camera,
+  ChevronRight,
+  Heart,
+  MessageCircle,
+  Package,
+  ShieldCheck,
+  Store,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/loja/layout";
@@ -22,12 +31,15 @@ const ATALHOS = [
 
 function PaginaConta() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, admin } = useAuth();
+  const atalhos = admin
+    ? [...ATALHOS, { to: "/admin" as const, rotulo: "Painel de administração", Icone: ShieldCheck }]
+    : ATALHOS;
   return (
     <AppShell>
       {user && (
         <nav className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {ATALHOS.map(({ to, rotulo, Icone }) => (
+          {atalhos.map(({ to, rotulo, Icone }) => (
             <Link
               key={to}
               to={to}
