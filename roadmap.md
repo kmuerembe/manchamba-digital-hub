@@ -7,3 +7,4 @@
 - [x] Adicionar diagnóstico, mensagens, aprendizagem e perfil
 - [x] Preparar instalação PWA e funcionamento offline básico
 - [x] Validar compilação e experiência visual
+- [x] Construir o painel de administração (`/admin`) com resumo, aprovações, encomendas, utilizadores, categorias, denúncias e artigos

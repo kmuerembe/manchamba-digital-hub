@@ -54,10 +54,10 @@ export type Pagamento = {
   criadoEm: string;
 };
 
-const SELECT_PEDIDO =
+export const SELECT_PEDIDO =
   "id,numero,comprador_id,estado,subtotal,envio,total,metodo_pagamento,telefone_pagamento,endereco,notas,pago_em,criado_em,pedido_itens(id,produto_id,vendedor_id,titulo,preco,quantidade,imagem_url,estado)";
 
-type LinhaPedido = {
+export type LinhaPedido = {
   id: string;
   numero: string;
   comprador_id: string;
@@ -83,7 +83,7 @@ type LinhaPedido = {
   }[];
 };
 
-async function mapearPedidos(linhas: LinhaPedido[]): Promise<Pedido[]> {
+export async function mapearPedidos(linhas: LinhaPedido[]): Promise<Pedido[]> {
   const caminhos = linhas
     .flatMap((linha) => linha.pedido_itens.map((item) => item.imagem_url ?? ""))
     .filter(Boolean);

@@ -41,7 +41,7 @@ export type Produto = {
   marca: string | null;
 };
 
-type LinhaProduto = {
+export type LinhaProduto = {
   id: string;
   titulo: string;
   descricao: string | null;
@@ -68,10 +68,10 @@ type LinhaProduto = {
   marca: string | null;
 };
 
-const SELECT_PRODUTO =
+export const SELECT_PRODUTO =
   "id,titulo,descricao,preco,unidade,quantidade,negociavel,estado,provincia,distrito,bairro,destaque,criado_em,categoria_id,vendedor_id,stock,preco_antigo,envio_gratis,custo_envio,vendas,marca,categorias(nome),produto_fotos(url,ordem),profiles!produtos_vendedor_fk(nome,verificado)";
 
-async function mapearProdutos(linhas: LinhaProduto[]): Promise<Produto[]> {
+export async function mapearProdutos(linhas: LinhaProduto[]): Promise<Produto[]> {
   const caminhos = linhas.flatMap((linha) => (linha.produto_fotos ?? []).map((foto) => foto.url));
   const urls = await urlsDasFotos("produtos", caminhos);
 
