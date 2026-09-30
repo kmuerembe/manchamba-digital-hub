@@ -42,7 +42,7 @@ O painel fica em **`/admin`** (atalho na página *Conta* para contas com o papel
 
 | Área | O que faz |
 | --- | --- |
-| Resumo | Receita paga, encomendas, utilizadores e vendedores, gráfico de encomendas/receita dos últimos 14 dias, pagamentos por operadora, categorias com mais anúncios e lista do que precisa de atenção. |
+| Resumo | Receita paga, encomendas, utilizadores e vendedores, gráfico de encomendas/receita dos últimos 14 dias, pagamentos por operadora, categorias com mais anúncios, lista do que precisa de atenção e **estado da instalação**. |
 | Aprovações | Revê os anúncios `pendente` e aprova, rejeita, destaca ou ajusta stock (o vendedor recebe notificação). |
 | Encomendas | Todas as encomendas com dados de entrega, artigos, pagamentos e mudança de estado. |
 | Utilizadores | Procura contas, vê nº de anúncios/encomendas e dá ou retira o papel de administrador, verifica e activa contas. |
@@ -52,6 +52,22 @@ O painel fica em **`/admin`** (atalho na página *Conta* para contas com o papel
 
 Alterações de papéis passam por server functions (`src/lib/admin.functions.ts`) que validam o papel de
 administrador e escrevem com o service role — `user_roles` não permite escrita directa pelo cliente.
+
+### Estado da instalação
+
+No fim do resumo, o bloco **Estado da instalação** diz o que ainda falta configurar no projecto:
+
+| Verificação | O que denuncia |
+| --- | --- |
+| Baldes de fotografias | `produtos`/`diagnosticos` em falta no storage — correr a migração `0004_storage_baldes.sql`. |
+| Chave de serviço | `SUPABASE_SERVICE_ROLE_KEY` ausente: sem ela não há encomendas, pagamentos nem alterações de papéis. |
+| M-Pesa e e-Mola | Credenciais em falta; quando a simulação está ligada, avisa que os pagamentos se confirmam sozinhos. |
+| Categorias de produtos | Sem categorias activas ninguém consegue publicar anúncios. |
+| Administradores | Quantas contas têm o papel `admin` (e o que fazer se forem zero). |
+| Diagnóstico de culturas | `LOVABLE_API_KEY` ausente desliga a análise de fotografias. |
+
+A verificação corre no servidor (`estadoInstalacao` em `src/lib/admin.functions.ts`) e devolve apenas
+estados e textos — nunca valores de chaves ou segredos.
 
 ### Dar o primeiro administrador
 
@@ -66,12 +82,52 @@ on conflict do nothing;
 
 Depois disso, o próprio painel (aba *Utilizadores*) já permite dar e retirar acesso a mais contas.
 
+## Publicar anúncios e fotografias
+
+Publicar um anúncio escreve em três sítios: `produtos` (o anúncio), `storage` (as fotografias) e
+`produto_fotos` (a ligação entre os dois). Qualquer um deles podia falhar por razões diferentes e o
+ecrã mostrava sempre a mesma frase — **"Não foi possível publicar o anúncio. Tenta de novo."** — sem
+dizer o que estava errado nem o que fazer. O diagnóstico de culturas falhava pela mesma razão.
+
+O que passou a existir:
+
+- **Migração `drizzle/migrations/0004_storage_baldes.sql`** — cria os baldes `produtos` e
+  `diagnosticos` no storage. A `0001_storage_policies.sql` criou as políticas de `storage.objects`
+  para esses baldes, mas os baldes em si nunca foram criados, por isso cada upload devolvia
+  `Bucket not found`. **É preciso correr esta migração no SQL editor do Supabase**; é idempotente,
+  pode ser repetida sem estragar nada.
+- **`src/lib/erros.ts`** — traduz os erros do Supabase (PostgREST, Auth e Storage) em mensagens úteis:
+  sessão expirada, perfil de vendedor em falta, RLS a recusar a escrita, fotografia demasiado grande,
+  tabela ou coluna em falta (migração por correr), rede caída. Mensagens já escritas para o utilizador
+  passam tal e qual; o resto cai num aviso genérico em vez de mostrar SQL no ecrã.
+- **Fluxo de publicação (`SellModal` em `src/components/machamba/modais.tsx`)** — confirma que a
+  sessão ainda é válida antes de escrever, cria o perfil do vendedor quando a conta não o tem
+  (`produtos.vendedor_id` é chave estrangeira para `profiles(id)`), valida o preço antes de chegar à
+  base de dados e **não perde o anúncio quando uma fotografia falha**: o anúncio é criado, as
+  fotografias que passaram são associadas e as que falharam aparecem explicadas na mensagem final.
+- **`enviarFotos` em `src/lib/fotos.ts`** — envia as fotografias uma a uma e devolve
+  `{ enviadas, falhas, baldeEmFalta }` em vez de rebentar com tudo à primeira falha.
+
+### Como verificar
+
+1. Corre `drizzle/migrations/0004_storage_baldes.sql` no SQL editor do Supabase.
+2. Em *Storage*, confirma que existem os baldes `produtos` e `diagnosticos`.
+3. Em `/admin` → *Resumo*, o bloco **Estado da instalação** deve mostrar
+   "Baldes de fotografias — Em ordem".
+4. Em `/vender` → *Publicar produto*, preenche o formulário com duas ou três fotografias e envia: o
+   anúncio fica em "Em revisão" n'*Os meus produtos* e as fotografias aparecem na página do produto
+   depois da aprovação.
+5. Sem a migração corrida, o anúncio continua a ser criado e a mensagem final diz quantas fotografias
+   não foram carregadas e porquê (em vez de o formulário se perder).
+
 ## Base de dados
 
 As migrações estão em `drizzle/migrations`. A `0003_loja_pedidos_pagamentos.sql` adiciona stock,
 preço antigo, entrega e vendas aos produtos, categorias gerais, e as tabelas `enderecos`, `pedidos`,
 `pedido_itens` e `pagamentos` com RLS (só o servidor escreve encomendas e pagamentos) e triggers que
-marcam o pedido como pago, baixam stock e notificam vendedores.
+marcam o pedido como pago, baixam stock e notificam vendedores. A `0004_storage_baldes.sql` cria os
+baldes de fotografias `produtos` e `diagnosticos` e repõe as políticas de `storage.objects` — sem ela,
+publicar anúncios com fotografias e o diagnóstico de culturas falham.
 
 ## Estrutura principal
 
@@ -80,6 +136,8 @@ src/lib/pagamentos/mpesa.server.ts     cliente API M-Pesa (RSA + C2B + consulta)
 src/lib/pagamentos/emola.server.ts     cliente SOAP e-Mola (pushUssdMessage + queryTransaction)
 src/lib/pagamentos/processar.server.ts orquestração: cobrar, reconsultar, callback, simulação
 src/lib/loja.functions.ts              server functions: criarPedido, iniciarPagamento, consultarPagamento, ...
+src/lib/erros.ts                       tradução dos erros do Supabase em mensagens que se percebem
+src/lib/fotos.ts                       compressão e upload de fotografias (baldes produtos/diagnosticos)
 src/routes/api/pagamentos/emola-callback.ts  callback assíncrono e-Mola
 src/routes/{index,pesquisa,produto.$id,carrinho,checkout,pedidos/*,vender,conta}.tsx  páginas da loja
 ```

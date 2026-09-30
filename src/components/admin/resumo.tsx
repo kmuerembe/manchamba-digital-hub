@@ -1,6 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   BookOpen,
+  CheckCircle2,
   PackageCheck,
   PackageSearch,
   ShieldAlert,
@@ -8,6 +10,8 @@ import {
   TrendingUp,
   Users,
   Wallet,
+  XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -27,8 +31,9 @@ import {
 } from "recharts";
 
 import type { AbaAdmin } from "@/components/admin/ui";
-import { AcaoRapida, Bloco, Esqueleto, Kpi } from "@/components/admin/ui";
-import type { ResumoAdmin } from "@/lib/admin.functions";
+import { AcaoRapida, Bloco, Esqueleto, Etiqueta, Kpi } from "@/components/admin/ui";
+import type { EstadoVerificacao, ResumoAdmin } from "@/lib/admin.functions";
+import { estadoInstalacao } from "@/lib/admin.functions";
 import { mzn } from "@/lib/formato";
 
 const ROTULO_ABA: Record<string, string> = {
@@ -48,6 +53,94 @@ function milhar(valor: unknown): string {
   const numero = Number(valor);
   if (!Number.isFinite(numero)) return "";
   return numero >= 1000 ? `${Math.round(numero / 1000)}k` : String(Math.round(numero));
+}
+
+const TOM_INSTALACAO: Record<
+  EstadoVerificacao,
+  { Icone: LucideIcon; tom: string; rotulo: string; etiqueta: string }
+> = {
+  ok: {
+    Icone: CheckCircle2,
+    tom: "text-primary",
+    rotulo: "Em ordem",
+    etiqueta: "bg-success/15 text-primary",
+  },
+  aviso: {
+    Icone: AlertTriangle,
+    tom: "text-accent-foreground",
+    rotulo: "Aviso",
+    etiqueta: "bg-secondary text-muted-foreground",
+  },
+  erro: {
+    Icone: XCircle,
+    tom: "text-destructive",
+    rotulo: "A corrigir",
+    etiqueta: "bg-destructive/10 text-destructive",
+  },
+};
+
+/**
+ * O que falta configurar no Supabase e nas variáveis de ambiente — migrações por
+ * correr, baldes de fotografias em falta, pagamentos em simulação. É o primeiro
+ * sítio a olhar quando publicar anúncios ou cobrar pagamentos começa a falhar.
+ */
+function Instalacao() {
+  const instalacao = useQuery({
+    queryKey: ["admin-instalacao"],
+    queryFn: () => estadoInstalacao(),
+    staleTime: 60_000,
+  });
+
+  const dados = instalacao.data;
+
+  return (
+    <Bloco
+      titulo="Estado da instalação"
+      descricao="Migrações, baldes de fotografias, pagamentos móveis e variáveis de ambiente."
+      acao={
+        dados && (
+          <Etiqueta
+            tom={
+              dados.aCorrigir ? "bg-destructive/10 text-destructive" : "bg-success/15 text-primary"
+            }
+          >
+            {dados.aCorrigir ? `${dados.aCorrigir} a corrigir` : "Tudo em ordem"}
+          </Etiqueta>
+        )
+      }
+    >
+      {instalacao.isLoading && <Esqueleto linhas={2} />}
+      {instalacao.isError && (
+        <p className="text-sm text-muted-foreground">
+          Não foi possível verificar a instalação. Recarrega a página.
+        </p>
+      )}
+      {dados && (
+        <ul className="grid gap-2 lg:grid-cols-2">
+          {dados.verificacoes.map((item) => {
+            const tom = TOM_INSTALACAO[item.estado];
+            return (
+              <li
+                key={item.chave}
+                className="flex items-start gap-2 rounded-lg border border-border bg-background p-2.5"
+              >
+                <tom.Icone className={`mt-0.5 size-4 shrink-0 ${tom.tom}`} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <strong className="text-xs font-semibold">{item.rotulo}</strong>
+                    <Etiqueta tom={tom.etiqueta}>{tom.rotulo}</Etiqueta>
+                  </span>
+                  <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
+                    {item.detalhe}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Bloco>
+  );
 }
 
 /** Os gráficos só são montados no browser (o ResponsiveContainer mede o elemento). */
@@ -360,6 +453,8 @@ export function PainelResumo({
           </Bloco>
         </div>
       </div>
+
+      <Instalacao />
     </div>
   );
 }

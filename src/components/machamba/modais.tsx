@@ -1,3 +1,4 @@
+import type { User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Flag, Heart, MapPin, MessageCircle, PackagePlus, Star } from "lucide-react";
 import { useState } from "react";
@@ -5,7 +6,8 @@ import { useState } from "react";
 import { AppButton, Estrelas, ModalShell, ProdutoFoto } from "@/components/machamba/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { enviarFoto } from "@/lib/fotos";
+import { codigoDoErro, mensagemDeErro } from "@/lib/erros";
+import { enviarFotos, type EnvioDeFotos } from "@/lib/fotos";
 import {
   abrirConversa,
   avaliacaoDoVendedor,
@@ -332,6 +334,50 @@ export function FilterModal({
   );
 }
 
+/**
+ * Garante que existe uma linha em `public.profiles` para esta conta.
+ *
+ * `produtos.vendedor_id` é chave estrangeira para `profiles(id)` (migração 0002)
+ * e há contas sem perfil — criadas antes do trigger `handle_new_user` ou por
+ * entrada com telemóvel. Sem a linha, o insert do anúncio morria com 23503 e o
+ * ecrã mostrava apenas "Não foi possível publicar o anúncio".
+ */
+async function garantirPerfilVendedor(utilizadorId: string, utilizador: User) {
+  const { data: existente } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", utilizadorId)
+    .maybeSingle();
+  if (existente) return;
+
+  const meta = (utilizador.user_metadata ?? {}) as Record<string, unknown>;
+  const texto = (chave: string) => {
+    const valor = meta[chave];
+    return typeof valor === "string" && valor.trim() ? valor.trim() : null;
+  };
+
+  const { error } = await supabase.from("profiles").insert({
+    id: utilizadorId,
+    nome: texto("nome") ?? utilizador.email?.split("@")[0] ?? "Vendedor",
+    email: utilizador.email ?? null,
+    telefone: texto("telefone") ?? utilizador.phone ?? null,
+    tipo: texto("tipo") ?? "vendedor",
+    provincia: texto("provincia"),
+    distrito: texto("distrito"),
+  });
+  // 23505: outra janela criou o perfil entretanto — não é um erro para o utilizador.
+  if (error && codigoDoErro(error) !== "23505") throw error;
+}
+
+/** O anúncio é criado mesmo que as fotografias falhem; só o texto final muda. */
+function mensagemDePublicacao(envio: EnvioDeFotos): string {
+  if (!envio.falhas.length) return "Anúncio enviado para revisão";
+  if (envio.baldeEmFalta)
+    return "Anúncio enviado para revisão, mas as fotografias não foram guardadas: falta criar os baldes de imagens no Supabase.";
+  const quantas = envio.falhas.length;
+  return `Anúncio enviado para revisão — ${quantas} fotografia(s) não foram carregadas. Podes adicioná-las depois.`;
+}
+
 export function SellModal({
   onClose,
   onDone,
@@ -339,7 +385,7 @@ export function SellModal({
   onClose: () => void;
   onDone: (mensagem: string) => void;
 }) {
-  const { user, perfil } = useAuth();
+  const { user, perfil, recarregarPerfil } = useAuth();
   const queryClient = useQueryClient();
   const categorias = useQuery({ queryKey: ["categorias"], queryFn: listarCategorias });
 
@@ -363,23 +409,38 @@ export function SellModal({
   const cidades = citiesOf(provincia);
 
   const publicar = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<EnvioDeFotos> => {
+      // 1. Sessão válida: sem JWT o RLS recusa o insert sem explicação útil.
+      const { data: sessao, error: erroSessao } = await supabase.auth.getSession();
+      const utilizadorId = sessao.session?.user.id;
+      if (erroSessao || !utilizadorId || !sessao.session)
+        throw new Error("A tua sessão expirou. Entra de novo para publicar o anúncio.");
+
+      // 2. Perfil do vendedor (chave estrangeira de produtos.vendedor_id).
+      await garantirPerfilVendedor(utilizadorId, sessao.session.user);
+
+      // 3. Preço válido — `Number("")` é 0 e texto livre dava 22P02 na base de dados.
+      const precoNumero = Number(preco);
+      if (!Number.isFinite(precoNumero) || precoNumero <= 0)
+        throw new Error("Indica um preço válido em MZN.");
+
+      // 4. Anúncio.
       const { data, error } = await supabase
         .from("produtos")
         .insert({
           titulo,
           descricao: descricao || null,
-          preco: Number(preco),
+          preco: precoNumero,
           unidade,
           quantidade: quantidade ? Number(quantidade) : null,
           negociavel,
           categoria_id: categoriaId || null,
-          vendedor_id: user!.id,
+          vendedor_id: utilizadorId,
           provincia: provincia || null,
           distrito: distrito || null,
           stock: Math.max(0, Number(stock) || 0),
           preco_antigo:
-            precoAntigo && Number(precoAntigo) > Number(preco) ? Number(precoAntigo) : null,
+            precoAntigo && Number(precoAntigo) > precoNumero ? Number(precoAntigo) : null,
           envio_gratis: envioGratis,
           custo_envio: envioGratis ? 0 : Number(custoEnvio) || 0,
           marca: marca.trim() || null,
@@ -387,18 +448,28 @@ export function SellModal({
         .select("id")
         .single();
       if (error) throw error;
-      for (const [indice, foto] of fotos.slice(0, 5).entries()) {
-        const caminho = await enviarFoto("produtos", user!.id, foto);
-        await supabase
+      if (!data) throw new Error("Não foi possível publicar o anúncio. Tenta de novo.");
+
+      // 5. Fotografias: cada falha é registada, nunca deita o anúncio abaixo.
+      const envio = await enviarFotos("produtos", utilizadorId, fotos.slice(0, 5));
+      for (const [indice, caminho] of envio.enviadas.entries()) {
+        const { error: erroFoto } = await supabase
           .from("produto_fotos")
           .insert({ produto_id: data.id, url: caminho, ordem: indice });
+        if (erroFoto) console.warn("fotografia não associada ao anúncio", erroFoto);
       }
+      if (envio.falhas.length) console.warn("fotografias por carregar", envio.falhas);
+      return envio;
     },
-    onSuccess: () => {
+    onSuccess: (envio) => {
       void queryClient.invalidateQueries({ queryKey: ["meus-produtos", user?.id] });
-      onDone("Anúncio enviado para revisão");
+      void recarregarPerfil();
+      onDone(mensagemDePublicacao(envio));
     },
-    onError: () => setErro("Não foi possível publicar o anúncio. Tenta de novo."),
+    onError: (erro) => {
+      console.error("publicação do anúncio falhou", erro);
+      setErro(mensagemDeErro(erro, "Não foi possível publicar o anúncio. Tenta de novo."));
+    },
   });
 
   return (

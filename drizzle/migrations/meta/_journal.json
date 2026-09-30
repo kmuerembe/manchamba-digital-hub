@@ -29,6 +29,13 @@
       "when": 1790802000000,
       "tag": "0003_loja_pedidos_pagamentos",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790808519284,
+      "tag": "0004_storage_baldes",
+      "breakpoints": true
     }
   ]
 }

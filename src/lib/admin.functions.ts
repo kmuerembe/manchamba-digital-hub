@@ -1,4 +1,5 @@
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Balde } from "@/lib/fotos";
 import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -210,4 +211,196 @@ export const definirAdministrador = createServerFn({ method: "POST" })
     });
 
     return { ok: true, nome: perfil?.nome ?? "" };
+  });
+
+/**
+ * Baldes que `drizzle/migrations/0004_storage_baldes.sql` cria no storage do
+ * Supabase. O tipo vem de `@/lib/fotos` (que é quem faz os uploads) para os nomes
+ * não divergirem.
+ */
+const BALDES_FOTOS: Balde[] = ["produtos", "diagnosticos"];
+
+export type EstadoVerificacao = "ok" | "aviso" | "erro";
+
+export type VerificacaoInstalacao = {
+  chave: string;
+  rotulo: string;
+  estado: EstadoVerificacao;
+  detalhe: string;
+};
+
+export type EstadoInstalacao = {
+  verificacoes: VerificacaoInstalacao[];
+  /** Baldes de storage encontrados no projecto. */
+  baldes: string[];
+  /** Quantas verificações precisam de intervenção (aviso ou erro). */
+  aCorrigir: number;
+};
+
+/**
+ * Estado da instalação: o que falta configurar no Supabase e nas variáveis de
+ * ambiente para a loja funcionar de ponta a ponta. É a primeira coisa a ver
+ * quando publicar anúncios ou cobrar pagamentos começa a falhar — por exemplo,
+ * os baldes de fotografias em falta (migração 0004) aparecem aqui como erro.
+ *
+ * Só devolve estados e textos: nunca devolve valores de chaves ou segredos.
+ */
+export const estadoInstalacao = createServerFn({ method: "GET" })
+  .middleware([exigirAdmin])
+  .handler(async (): Promise<EstadoInstalacao> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { disponibilidadeMetodos } = await import("@/lib/pagamentos/processar.server");
+    const verificacoes: VerificacaoInstalacao[] = [];
+
+    // --- baldes de fotografias (migração 0004) ---
+    let baldes: string[] = [];
+    let semLeitura = false;
+    try {
+      const { data, error } = await supabaseAdmin.storage.listBuckets();
+      if (error) throw error;
+      baldes = (data ?? []).map((balde) => balde.name);
+    } catch {
+      semLeitura = true;
+    }
+    const faltamBaldes = BALDES_FOTOS.filter((balde) => !baldes.includes(balde));
+    verificacoes.push(
+      semLeitura
+        ? {
+            chave: "baldes",
+            rotulo: "Baldes de fotografias",
+            estado: "aviso",
+            detalhe: "Não foi possível ler os baldes de storage a partir do servidor.",
+          }
+        : faltamBaldes.length
+          ? {
+              chave: "baldes",
+              rotulo: "Baldes de fotografias",
+              estado: "erro",
+              detalhe: `Falta criar ${faltamBaldes.map((balde) => `«${balde}»`).join(" e ")}: corre drizzle/migrations/0004_storage_baldes.sql no SQL editor do Supabase. Sem isto, publicar anúncios com fotografias e o diagnóstico de culturas falham.`,
+            }
+          : {
+              chave: "baldes",
+              rotulo: "Baldes de fotografias",
+              estado: "ok",
+              detalhe: "«produtos» e «diagnosticos» criados — os uploads de fotografias funcionam.",
+            },
+    );
+
+    // --- chave de serviço (escreve encomendas, pagamentos e user_roles) ---
+    verificacoes.push(
+      process.env["SUPABASE_SERVICE_ROLE_KEY"]
+        ? {
+            chave: "service-role",
+            rotulo: "Chave de serviço",
+            estado: "ok",
+            detalhe:
+              "SUPABASE_SERVICE_ROLE_KEY presente — encomendas, pagamentos e papéis funcionam.",
+          }
+        : {
+            chave: "service-role",
+            rotulo: "Chave de serviço",
+            estado: "erro",
+            detalhe:
+              "Falta SUPABASE_SERVICE_ROLE_KEY no servidor: não é possível criar encomendas, cobrar pagamentos nem dar acesso de administrador.",
+          },
+    );
+
+    // --- pagamentos móveis ---
+    const metodos = disponibilidadeMetodos();
+    const rotuloMetodo = (
+      nome: string,
+      metodo: { disponivel: boolean; ambiente: string | null },
+    ) =>
+      metodo.ambiente === "simulacao"
+        ? {
+            chave: nome,
+            rotulo: nome === "mpesa" ? "M-Pesa (Vodacom)" : "e-Mola (Movitel)",
+            estado: "aviso" as EstadoVerificacao,
+            detalhe:
+              nome === "mpesa"
+                ? "Em simulação: faltam MPESA_API_KEY e MPESA_PUBLIC_KEY, por isso os pagamentos confirmam-se sozinhos e não cobram dinheiro."
+                : "Em simulação: faltam as variáveis EMOLA_* , por isso os pagamentos confirmam-se sozinhos e não cobram dinheiro.",
+          }
+        : metodo.ambiente
+          ? {
+              chave: nome,
+              rotulo: nome === "mpesa" ? "M-Pesa (Vodacom)" : "e-Mola (Movitel)",
+              estado: "ok" as EstadoVerificacao,
+              detalhe: `Configurado em ambiente de ${metodo.ambiente === "producao" ? "produção" : "sandbox"}.`,
+            }
+          : {
+              chave: nome,
+              rotulo: nome === "mpesa" ? "M-Pesa (Vodacom)" : "e-Mola (Movitel)",
+              estado: "erro" as EstadoVerificacao,
+              detalhe:
+                "Sem credenciais e com a simulação desligada: este método não aceita pagamentos. Preenche o .env ou liga PAGAMENTOS_SIMULACAO=true.",
+            };
+    verificacoes.push(rotuloMetodo("mpesa", metodos.mpesa), rotuloMetodo("emola", metodos.emola));
+
+    // --- dados mínimos para a loja funcionar ---
+    const [categorias, administradores, produtos] = await Promise.all([
+      supabaseAdmin
+        .from("categorias")
+        .select("id", { count: "exact", head: true })
+        .eq("tipo", "produto")
+        .eq("ativo", true),
+      supabaseAdmin
+        .from("user_roles")
+        .select("user_id", { count: "exact", head: true })
+        .eq("role", "admin"),
+      supabaseAdmin.from("produtos").select("id", { count: "exact", head: true }),
+    ]);
+
+    verificacoes.push({
+      chave: "categorias",
+      rotulo: "Categorias de produtos",
+      estado: (categorias.count ?? 0) > 0 ? "ok" : "aviso",
+      detalhe:
+        (categorias.count ?? 0) > 0
+          ? `${categorias.count} categoria(s) activas — o formulário de publicação já tem por onde escolher.`
+          : "Sem categorias activas: ninguém consegue publicar anúncios. Corre a migração 0003 ou cria-as na aba Categorias.",
+    });
+
+    verificacoes.push({
+      chave: "administradores",
+      rotulo: "Administradores",
+      estado: (administradores.count ?? 0) > 0 ? "ok" : "erro",
+      detalhe:
+        (administradores.count ?? 0) > 0
+          ? `${administradores.count} conta(s) com o papel admin — o painel está acessível.`
+          : "Nenhuma conta tem o papel admin: atribui-o uma vez pelo SQL editor (ver README).",
+    });
+
+    verificacoes.push(
+      process.env["LOVABLE_API_KEY"]
+        ? {
+            chave: "ia",
+            rotulo: "Diagnóstico de culturas",
+            estado: "ok",
+            detalhe: "Chave de IA presente — a análise de fotografias de culturas funciona.",
+          }
+        : {
+            chave: "ia",
+            rotulo: "Diagnóstico de culturas",
+            estado: "aviso",
+            detalhe:
+              "Sem LOVABLE_API_KEY a análise de culturas está desligada; o resto da loja funciona normalmente.",
+          },
+    );
+
+    // produtos serve só para confirmar que as tabelas da loja existem e são legíveis
+    if (produtos.error)
+      verificacoes.push({
+        chave: "tabelas",
+        rotulo: "Tabelas da loja",
+        estado: "erro",
+        detalhe:
+          "Não foi possível ler a tabela produtos — faltam migrações de drizzle/migrations neste projecto.",
+      });
+
+    return {
+      verificacoes,
+      baldes,
+      aCorrigir: verificacoes.filter((item) => item.estado !== "ok").length,
+    };
   });
