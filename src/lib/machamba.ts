@@ -32,6 +32,13 @@ export type Produto = {
   vendedorNome: string;
   vendedorVerificado: boolean;
   imagem: string | null;
+  imagens: string[];
+  stock: number;
+  precoAntigo: number | null;
+  envioGratis: boolean;
+  custoEnvio: number;
+  vendas: number;
+  marca: string | null;
 };
 
 type LinhaProduto = {
@@ -53,19 +60,27 @@ type LinhaProduto = {
   categorias: { nome: string } | null;
   produto_fotos: { url: string; ordem: number }[] | null;
   profiles: { nome: string; verificado: boolean } | null;
+  stock: number | null;
+  preco_antigo: number | string | null;
+  envio_gratis: boolean | null;
+  custo_envio: number | string | null;
+  vendas: number | null;
+  marca: string | null;
 };
 
 const SELECT_PRODUTO =
-  "id,titulo,descricao,preco,unidade,quantidade,negociavel,estado,provincia,distrito,bairro,destaque,criado_em,categoria_id,vendedor_id,categorias(nome),produto_fotos(url,ordem),profiles!produtos_vendedor_fk(nome,verificado)";
+  "id,titulo,descricao,preco,unidade,quantidade,negociavel,estado,provincia,distrito,bairro,destaque,criado_em,categoria_id,vendedor_id,stock,preco_antigo,envio_gratis,custo_envio,vendas,marca,categorias(nome),produto_fotos(url,ordem),profiles!produtos_vendedor_fk(nome,verificado)";
 
 async function mapearProdutos(linhas: LinhaProduto[]): Promise<Produto[]> {
-  const caminhos = linhas
-    .map((linha) => [...(linha.produto_fotos ?? [])].sort((a, b) => a.ordem - b.ordem)[0]?.url)
-    .filter((valor): valor is string => Boolean(valor));
+  const caminhos = linhas.flatMap((linha) => (linha.produto_fotos ?? []).map((foto) => foto.url));
   const urls = await urlsDasFotos("produtos", caminhos);
 
   return linhas.map((linha) => {
-    const caminho = [...(linha.produto_fotos ?? [])].sort((a, b) => a.ordem - b.ordem)[0]?.url ?? null;
+    const ordenadas = [...(linha.produto_fotos ?? [])].sort((a, b) => a.ordem - b.ordem);
+    const caminho = ordenadas[0]?.url ?? null;
+    const imagens = ordenadas
+      .map((foto) => urls[foto.url])
+      .filter((valor): valor is string => Boolean(valor));
     return {
       id: linha.id,
       titulo: linha.titulo,
@@ -86,6 +101,16 @@ async function mapearProdutos(linhas: LinhaProduto[]): Promise<Produto[]> {
       vendedorNome: linha.profiles?.nome?.trim() || "Vendedor",
       vendedorVerificado: Boolean(linha.profiles?.verificado),
       imagem: caminho ? (urls[caminho] ?? null) : null,
+      imagens,
+      stock: Number(linha.stock ?? 0),
+      precoAntigo:
+        linha.preco_antigo === null || linha.preco_antigo === undefined
+          ? null
+          : Number(linha.preco_antigo),
+      envioGratis: Boolean(linha.envio_gratis),
+      custoEnvio: Number(linha.custo_envio ?? 0),
+      vendas: Number(linha.vendas ?? 0),
+      marca: linha.marca ?? null,
     };
   });
 }
@@ -111,6 +136,34 @@ export async function listarProdutos(): Promise<Produto[]> {
   return mapearProdutos((data ?? []) as unknown as LinhaProduto[]);
 }
 
+export async function obterProduto(id: string): Promise<Produto | null> {
+  const { data, error } = await supabase
+    .from("produtos")
+    .select(SELECT_PRODUTO)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const [produto] = await mapearProdutos([data as unknown as LinhaProduto]);
+  return produto ?? null;
+}
+
+export async function listarProdutosDoVendedor(
+  vendedorId: string,
+  excluir?: string,
+): Promise<Produto[]> {
+  let consulta = supabase
+    .from("produtos")
+    .select(SELECT_PRODUTO)
+    .eq("estado", "ativo")
+    .eq("vendedor_id", vendedorId)
+    .limit(12);
+  if (excluir) consulta = consulta.neq("id", excluir);
+  const { data, error } = await consulta;
+  if (error) throw error;
+  return mapearProdutos((data ?? []) as unknown as LinhaProduto[]);
+}
+
 export async function listarProdutosPorEstado(estado: string): Promise<Produto[]> {
   const { data, error } = await supabase
     .from("produtos")
@@ -131,7 +184,9 @@ export async function listarMeusProdutos(utilizadorId: string): Promise<Produto[
   return mapearProdutos((data ?? []) as unknown as LinhaProduto[]);
 }
 
-export async function listarFavoritos(utilizadorId: string): Promise<{ ids: string[]; produtos: Produto[] }> {
+export async function listarFavoritos(
+  utilizadorId: string,
+): Promise<{ ids: string[]; produtos: Produto[] }> {
   const { data, error } = await supabase
     .from("favoritos")
     .select("produto_id")
@@ -139,7 +194,10 @@ export async function listarFavoritos(utilizadorId: string): Promise<{ ids: stri
   if (error) throw error;
   const ids = (data ?? []).map((linha) => linha.produto_id);
   if (!ids.length) return { ids: [], produtos: [] };
-  const { data: linhas, error: erroProdutos } = await supabase.from("produtos").select(SELECT_PRODUTO).in("id", ids);
+  const { data: linhas, error: erroProdutos } = await supabase
+    .from("produtos")
+    .select(SELECT_PRODUTO)
+    .in("id", ids);
   if (erroProdutos) throw erroProdutos;
   return { ids, produtos: await mapearProdutos((linhas ?? []) as unknown as LinhaProduto[]) };
 }
@@ -154,7 +212,9 @@ export async function alternarFavorito(utilizadorId: string, produtoId: string, 
     if (error) throw error;
     return;
   }
-  const { error } = await supabase.from("favoritos").insert({ utilizador_id: utilizadorId, produto_id: produtoId });
+  const { error } = await supabase
+    .from("favoritos")
+    .insert({ utilizador_id: utilizadorId, produto_id: produtoId });
   if (error) throw error;
 }
 
@@ -231,7 +291,11 @@ export async function listarMensagens(conversaId: string): Promise<Mensagem[]> {
 }
 
 /** Encontra a conversa existente para este produto e par de utilizadores, ou cria uma. */
-export async function abrirConversa(euId: string, outroId: string, produtoId: string | null): Promise<string> {
+export async function abrirConversa(
+  euId: string,
+  outroId: string,
+  produtoId: string | null,
+): Promise<string> {
   let procura = supabase
     .from("conversas")
     .select("id")
@@ -252,7 +316,12 @@ export async function abrirConversa(euId: string, outroId: string, produtoId: st
   return data.id;
 }
 
-export async function enviarMensagem(conversaId: string, remetenteId: string, destinatarioId: string, conteudo: string) {
+export async function enviarMensagem(
+  conversaId: string,
+  remetenteId: string,
+  destinatarioId: string,
+  conteudo: string,
+) {
   const { error } = await supabase.from("mensagens").insert({
     conversa_id: conversaId,
     remetente_id: remetenteId,
@@ -283,7 +352,11 @@ export async function listarNotificacoes(utilizadorId: string): Promise<Notifica
 }
 
 export async function marcarNotificacoesLidas(utilizadorId: string) {
-  await supabase.from("notificacoes").update({ lida: true }).eq("utilizador_id", utilizadorId).eq("lida", false);
+  await supabase
+    .from("notificacoes")
+    .update({ lida: true })
+    .eq("utilizador_id", utilizadorId)
+    .eq("lida", false);
 }
 
 export type Artigo = {
@@ -322,7 +395,9 @@ export type Analise = {
 export async function listarAnalises(utilizadorId: string): Promise<Analise[]> {
   const { data, error } = await supabase
     .from("analises_cultura")
-    .select("id,cultura,diagnostico,descricao,recomendacao,gravidade,confianca,estado,criado_em,foto_url,produtos_sugeridos")
+    .select(
+      "id,cultura,diagnostico,descricao,recomendacao,gravidade,confianca,estado,criado_em,foto_url,produtos_sugeridos",
+    )
     .eq("utilizador_id", utilizadorId)
     .order("criado_em", { ascending: false })
     .limit(30);
@@ -330,8 +405,13 @@ export async function listarAnalises(utilizadorId: string): Promise<Analise[]> {
   return (data ?? []) as Analise[];
 }
 
-export async function avaliacaoDoVendedor(vendedorId: string): Promise<{ media: number | null; total: number }> {
-  const { data, error } = await supabase.from("avaliacoes").select("estrelas").eq("avaliado_id", vendedorId);
+export async function avaliacaoDoVendedor(
+  vendedorId: string,
+): Promise<{ media: number | null; total: number }> {
+  const { data, error } = await supabase
+    .from("avaliacoes")
+    .select("estrelas")
+    .eq("avaliado_id", vendedorId);
   if (error) throw error;
   const linhas = data ?? [];
   if (!linhas.length) return { media: null, total: 0 };
@@ -350,17 +430,30 @@ export async function podeAvaliar(euId: string, outroId: string): Promise<boolea
   return Boolean(data?.length);
 }
 
-export async function guardarAvaliacao(avaliadorId: string, avaliadoId: string, estrelas: number, comentario: string) {
-  const { error } = await supabase
-    .from("avaliacoes")
-    .upsert(
-      { avaliador_id: avaliadorId, avaliado_id: avaliadoId, estrelas, comentario: comentario || null },
-      { onConflict: "avaliador_id,avaliado_id" },
-    );
+export async function guardarAvaliacao(
+  avaliadorId: string,
+  avaliadoId: string,
+  estrelas: number,
+  comentario: string,
+) {
+  const { error } = await supabase.from("avaliacoes").upsert(
+    {
+      avaliador_id: avaliadorId,
+      avaliado_id: avaliadoId,
+      estrelas,
+      comentario: comentario || null,
+    },
+    { onConflict: "avaliador_id,avaliado_id" },
+  );
   if (error) throw error;
 }
 
-export async function criarDenuncia(denuncianteId: string, produtoId: string, motivo: string, descricao: string) {
+export async function criarDenuncia(
+  denuncianteId: string,
+  produtoId: string,
+  motivo: string,
+  descricao: string,
+) {
   const { error } = await supabase.from("denuncias").insert({
     denunciante_id: denuncianteId,
     produto_id: produtoId,

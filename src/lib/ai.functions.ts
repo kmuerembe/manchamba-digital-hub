@@ -22,7 +22,13 @@ const DiagnosisSchema = z.object({
 
 export type CropDiagnosis = z.infer<typeof DiagnosisSchema>;
 
-export type ProdutoSugerido = { id: string; titulo: string; preco: number; unidade: string; provincia: string | null };
+export type ProdutoSugerido = {
+  id: string;
+  titulo: string;
+  preco: number;
+  unidade: string;
+  provincia: string | null;
+};
 
 export type ResultadoAnalise = {
   id: string | null;
@@ -33,7 +39,7 @@ export type ResultadoAnalise = {
 
 export const analyzeCropPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => AnalyzeInput.parse(input))
+  .validator((input: unknown) => AnalyzeInput.parse(input))
   .handler(async ({ data, context }): Promise<ResultadoAnalise> => {
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) throw new Error("Serviço de análise indisponível de momento.");
@@ -53,7 +59,10 @@ export const analyzeCropPhoto = createServerFn({ method: "POST" })
         {
           role: "user",
           content: [
-            { type: "text", text: `Cultura declarada pelo agricultor: ${data.crop}. Analisa a fotografia.` },
+            {
+              type: "text",
+              text: `Cultura declarada pelo agricultor: ${data.crop}. Analisa a fotografia.`,
+            },
             { type: "image", image: data.image },
           ],
         },
@@ -117,5 +126,10 @@ export const analyzeCropPhoto = createServerFn({ method: "POST" })
       .select("id")
       .maybeSingle();
 
-    return { id: guardada?.id ?? null, diagnostico: { ...diagnostico, confianca }, estado, sugestoes };
+    return {
+      id: guardada?.id ?? null,
+      diagnostico: { ...diagnostico, confianca },
+      estado,
+      sugestoes,
+    };
   });

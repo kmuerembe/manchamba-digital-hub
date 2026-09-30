@@ -7,12 +7,25 @@ import { emailDoTelefone, pareceTelefone, useAuth } from "@/lib/auth";
 import { citiesOf, provinceNames } from "@/lib/mozambique";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    voltar:
+      typeof search["voltar"] === "string" && search["voltar"].startsWith("/")
+        ? search["voltar"]
+        : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Entrar na Machamba Digital" },
-      { name: "description", content: "Cria a tua conta ou entra para comprar, vender e avaliar culturas em Moçambique." },
+      {
+        name: "description",
+        content:
+          "Cria a tua conta ou entra para comprar e vender em Moçambique com M-Pesa e e-Mola.",
+      },
       { property: "og:title", content: "Entrar na Machamba Digital" },
-      { property: "og:description", content: "Conta gratuita para agricultores e compradores em Moçambique." },
+      {
+        property: "og:description",
+        content: "Conta gratuita para agricultores e compradores em Moçambique.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -22,20 +35,22 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { voltar } = Route.useSearch();
+  const destino = voltar ?? "/";
   const { user, carregando } = useAuth();
   const [modo, setModo] = useState<"entrar" | "registar">("entrar");
   const [contacto, setContacto] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
-  const [tipo, setTipo] = useState("agricultor");
+  const [tipo, setTipo] = useState("comprador");
   const [provincia, setProvincia] = useState("");
   const [distrito, setDistrito] = useState("");
   const [erro, setErro] = useState("");
   const [ocupado, setOcupado] = useState(false);
 
   useEffect(() => {
-    if (!carregando && user) void navigate({ to: "/" });
-  }, [user, carregando, navigate]);
+    if (!carregando && user) void navigate({ to: destino });
+  }, [user, carregando, navigate, destino]);
 
   const submeter = async (evento: React.FormEvent) => {
     evento.preventDefault();
@@ -59,7 +74,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      await navigate({ to: "/" });
+      await navigate({ to: destino });
     } catch (falha) {
       const mensagem = falha instanceof Error ? falha.message : "";
       setErro(
@@ -82,7 +97,9 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md animate-enter">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
-          <span className="grid size-10 place-items-center rounded-lg bg-primary font-display text-lg font-bold text-primary-foreground">M</span>
+          <span className="grid size-10 place-items-center rounded-lg bg-primary font-display text-lg font-bold text-primary-foreground">
+            M
+          </span>
           <span>
             <strong className="block font-display text-base leading-none">Machamba</strong>
             <span className="text-xs text-muted-foreground">Digital</span>
@@ -90,7 +107,9 @@ function AuthPage() {
         </Link>
 
         <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-          <h1 className="font-display text-2xl font-bold">{modo === "entrar" ? "Entrar na tua conta" : "Criar conta"}</h1>
+          <h1 className="font-display text-2xl font-bold">
+            {modo === "entrar" ? "Entrar na tua conta" : "Criar conta"}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Podes usar o teu email ou o número de telemóvel (+258).
           </p>
@@ -142,8 +161,9 @@ function AuthPage() {
                     onChange={(evento) => setTipo(evento.target.value)}
                     className="mt-2 h-11 w-full rounded-lg border border-border bg-background px-3 font-normal"
                   >
-                    <option value="agricultor">Agricultor</option>
                     <option value="comprador">Comprador</option>
+                    <option value="vendedor">Vendedor / Loja</option>
+                    <option value="agricultor">Agricultor</option>
                     <option value="agronomo">Agrónomo</option>
                   </select>
                 </label>
@@ -183,7 +203,10 @@ function AuthPage() {
             )}
 
             {erro && (
-              <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              <p
+                role="alert"
+                className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+              >
                 {erro}
               </p>
             )}
@@ -211,7 +234,7 @@ function AuthPage() {
         </div>
 
         <Link to="/" className="mt-5 block text-center text-sm text-muted-foreground">
-          Voltar ao mercado
+          Voltar à loja
         </Link>
       </div>
     </div>

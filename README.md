@@ -1,14 +1,59 @@
-# Manchamba Digital Hub
+# Machamba Digital — loja online de Moçambique
 
-Lovable peço que melhores esse projeto com base nesse prompt e veja o que tu podes melhorar que poderia ser útil para nosso projeto em torno do nosso tema
+Marketplace estilo AliExpress para Moçambique: qualquer pessoa pode abrir loja, publicar produtos
+(da machamba à electrónica) e receber pagamentos **M-Pesa** e **e-Mola** directamente no telemóvel.
 
+## O que está incluído
 
+| Área | Detalhes |
+| --- | --- |
+| Contas | Registo/entrada com email ou telemóvel (+258) via Supabase Auth; perfis, papéis de admin. |
+| Loja | Página inicial com banners, categorias, promoções e mais vendidos; pesquisa com filtros por categoria, província, distrito e ordenação; página de produto com galeria, stock, desconto e entrega. |
+| Carrinho e checkout | Carrinho persistente no dispositivo, endereço de entrega (guardado na conta), resumo, criação da encomenda validada no servidor (preços e stock nunca vêm do browser). |
+| Pagamentos | **M-Pesa** (API oficial Vodacom, C2B single stage + consulta de estado) e **e-Mola** (gateway BCCS da Movitel, `pushUssdMessage` + callback assíncrono). USSD push → cliente confirma PIN → encomenda fica paga, stock baixa, vendedor é notificado. |
+| Encomendas | Lista e detalhe com histórico de pagamentos em tempo real (Supabase Realtime), repetir pagamento, cancelar. |
+| Vendedor | Painel com vendas pagas, dados de entrega do cliente, actualização de estado por artigo (confirmado → enviado → entregue), gestão de stock, publicação com várias fotografias. |
+| Extras herdados | Diagnóstico de culturas por IA, mensagens em tempo real, favoritos, artigos “Aprender”. |
 
-"Manchamba Digital"
+## Configurar os pagamentos
 
+Copia `.env.example` e preenche as variáveis. Sem credenciais, em desenvolvimento, a loja corre em
+**modo de simulação** (o pagamento confirma-se sozinho após alguns segundos e fica marcado como
+`simulacao`). Em produção a simulação está desligada.
 
+### M-Pesa (Vodacom)
+1. Cria conta em <https://developer.mpesa.vm.co.mz>, cria uma aplicação e activa **C2B Payment**.
+2. Copia a **API Key** e a **Public Key** para `MPESA_API_KEY` / `MPESA_PUBLIC_KEY`.
+3. `MPESA_SERVICE_PROVIDER_CODE=171717` no sandbox; em produção usa o teu código de comerciante e `MPESA_AMBIENTE=producao`.
+4. O servidor cifra a API Key com a chave pública (RSA) e chama
+   `https://api.(sandbox.)vm.co.mz:18352/ipg/v1x/c2bPayment/singleStage/`. Estados inconclusivos são
+   reconsultados em `:18353/ipg/v1x/queryTransactionStatus/`.
 
-Agora veja o prompt
+### e-Mola (Movitel)
+1. Pede à Movitel a integração e-Mola API (recebes URL do web service, `username`, `password`, `partnerCode` e `key`).
+2. Preenche `EMOLA_URL`, `EMOLA_USERNAME`, `EMOLA_PASSWORD`, `EMOLA_PARTNER_CODE`, `EMOLA_KEY`.
+3. Regista o callback `https://<o-teu-dominio>/api/pagamentos/emola-callback` (opcionalmente protegido com `EMOLA_CALLBACK_SECRET`).
+4. Respostas `0` = pago, `22` = a processar (aguarda callback/consulta), `11` = tempo esgotado.
+
+## Base de dados
+
+As migrações estão em `drizzle/migrations`. A `0003_loja_pedidos_pagamentos.sql` adiciona stock,
+preço antigo, entrega e vendas aos produtos, categorias gerais, e as tabelas `enderecos`, `pedidos`,
+`pedido_itens` e `pagamentos` com RLS (só o servidor escreve encomendas e pagamentos) e triggers que
+marcam o pedido como pago, baixam stock e notificam vendedores.
+
+## Estrutura principal
+
+```
+src/lib/pagamentos/mpesa.server.ts     cliente API M-Pesa (RSA + C2B + consulta)
+src/lib/pagamentos/emola.server.ts     cliente SOAP e-Mola (pushUssdMessage + queryTransaction)
+src/lib/pagamentos/processar.server.ts orquestração: cobrar, reconsultar, callback, simulação
+src/lib/loja.functions.ts              server functions: criarPedido, iniciarPagamento, consultarPagamento, ...
+src/routes/api/pagamentos/emola-callback.ts  callback assíncrono e-Mola
+src/routes/{index,pesquisa,produto.$id,carrinho,checkout,pedidos/*,vender,conta}.tsx  páginas da loja
+```
+
+---
 
 This project was built with [Lovable](https://lovable.dev).
 

@@ -1,14 +1,22 @@
 {
-  "name": "Machamba Digital",
+  "name": "Machamba Digital — Loja online",
   "short_name": "Machamba",
-  "description": "Mercado agrícola e diagnóstico orientativo de culturas em Moçambique.",
+  "description": "Compra e vende em Moçambique. Paga com M-Pesa ou e-Mola.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f6f1e6",
   "theme_color": "#14532d",
   "lang": "pt-MZ",
   "icons": [
-    {"src":"/icon-192.png","sizes":"192x192","type":"image/png"},
-    {"src":"/icon-512.png","sizes":"512x512","type":"image/png"}
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }

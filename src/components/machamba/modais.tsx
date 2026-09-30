@@ -67,16 +67,21 @@ export function ProductModal({
           <p className="text-xs font-bold text-primary">{produto.categoria}</p>
           <h3 className="font-display text-2xl font-bold">{produto.titulo}</h3>
           <p className="text-sm text-muted-foreground">
-            {produto.quantidade ? `${produto.quantidade} ${produto.unidade} disponíveis` : "Disponibilidade a combinar"}
+            {produto.quantidade
+              ? `${produto.quantidade} ${produto.unidade} disponíveis`
+              : "Disponibilidade a combinar"}
             {produto.negociavel ? " · preço negociável" : ""}
           </p>
         </div>
         <strong className="shrink-0 font-display text-xl">
-          {produto.preco} <small className="font-sans text-xs text-muted-foreground">MZN/{produto.unidade}</small>
+          {produto.preco}{" "}
+          <small className="font-sans text-xs text-muted-foreground">MZN/{produto.unidade}</small>
         </strong>
       </div>
 
-      {produto.descricao && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{produto.descricao}</p>}
+      {produto.descricao && (
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{produto.descricao}</p>
+      )}
 
       <div className="mt-4 flex items-center justify-between border-y border-border py-4">
         <div className="min-w-0">
@@ -120,7 +125,11 @@ export function ProductModal({
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <AppButton variant="plain" onClick={() => (user ? setAvaliar(true) : pedirEntrada())} disabled={!posso.data}>
+        <AppButton
+          variant="plain"
+          onClick={() => (user ? setAvaliar(true) : pedirEntrada())}
+          disabled={!posso.data}
+        >
           <Star className="size-4" /> Avaliar vendedor
         </AppButton>
         <AppButton variant="plain" onClick={() => (user ? setDenunciar(true) : pedirEntrada())}>
@@ -128,7 +137,9 @@ export function ProductModal({
         </AppButton>
       </div>
       {user && posso.data === false && user.id !== produto.vendedorId && (
-        <p className="mt-2 text-xs text-muted-foreground">Só podes avaliar depois de teres conversado com este vendedor.</p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Só podes avaliar depois de teres conversado com este vendedor.
+        </p>
       )}
 
       {avaliar && (
@@ -156,7 +167,15 @@ export function ProductModal({
   );
 }
 
-function AvaliarModal({ vendedorId, onClose, onDone }: { vendedorId: string; onClose: () => void; onDone: () => void }) {
+function AvaliarModal({
+  vendedorId,
+  onClose,
+  onDone,
+}: {
+  vendedorId: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
   const { user } = useAuth();
   const [estrelas, setEstrelas] = useState(5);
   const [comentario, setComentario] = useState("");
@@ -169,8 +188,15 @@ function AvaliarModal({ vendedorId, onClose, onDone }: { vendedorId: string; onC
     <ModalShell title="Avaliar vendedor" onClose={onClose}>
       <div className="mt-5 flex gap-2">
         {[1, 2, 3, 4, 5].map((valor) => (
-          <button key={valor} onClick={() => setEstrelas(valor)} aria-label={`${valor} estrelas`} className="p-1">
-            <Star className={`size-7 ${valor <= estrelas ? "fill-accent text-accent" : "text-muted-foreground"}`} />
+          <button
+            key={valor}
+            onClick={() => setEstrelas(valor)}
+            aria-label={`${valor} estrelas`}
+            className="p-1"
+          >
+            <Star
+              className={`size-7 ${valor <= estrelas ? "fill-accent text-accent" : "text-muted-foreground"}`}
+            />
           </button>
         ))}
       </div>
@@ -181,14 +207,26 @@ function AvaliarModal({ vendedorId, onClose, onDone }: { vendedorId: string; onC
         placeholder="Comentário (opcional)"
         className="mt-4 w-full rounded-lg border border-border bg-card p-3 text-sm"
       />
-      <AppButton className="mt-4 w-full" disabled={guardar.isPending} onClick={() => guardar.mutate()}>
+      <AppButton
+        className="mt-4 w-full"
+        disabled={guardar.isPending}
+        onClick={() => guardar.mutate()}
+      >
         Enviar avaliação
       </AppButton>
     </ModalShell>
   );
 }
 
-function DenunciarModal({ produtoId, onClose, onDone }: { produtoId: string; onClose: () => void; onDone: () => void }) {
+function DenunciarModal({
+  produtoId,
+  onClose,
+  onDone,
+}: {
+  produtoId: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
   const { user } = useAuth();
   const [motivo, setMotivo] = useState("Anúncio falso");
   const [descricao, setDescricao] = useState("");
@@ -219,7 +257,11 @@ function DenunciarModal({ produtoId, onClose, onDone }: { produtoId: string; onC
         placeholder="Explica o que se passou (opcional)"
         className="mt-4 w-full rounded-lg border border-border bg-card p-3 text-sm"
       />
-      <AppButton className="mt-4 w-full" disabled={guardar.isPending} onClick={() => guardar.mutate()}>
+      <AppButton
+        className="mt-4 w-full"
+        disabled={guardar.isPending}
+        onClick={() => guardar.mutate()}
+      >
         Enviar denúncia
       </AppButton>
     </ModalShell>
@@ -227,46 +269,30 @@ function DenunciarModal({ produtoId, onClose, onDone }: { produtoId: string; onC
 }
 
 export function FilterModal({
-  categoria,
   provincia,
   cidade,
-  categorias,
-  onCategoria,
   onProvincia,
   onCidade,
   onClose,
 }: {
-  categoria: string;
   provincia: string;
   cidade: string;
-  categorias: string[];
-  onCategoria: (valor: string) => void;
   onProvincia: (valor: string) => void;
   onCidade: (valor: string) => void;
   onClose: () => void;
 }) {
   const cidades = citiesOf(provincia);
   return (
-    <ModalShell title="Filtrar mercado" onClose={onClose}>
+    <ModalShell title="Filtrar por local" onClose={onClose}>
       <div className="mt-5 space-y-4">
-        <label className="block text-sm font-semibold">
-          Categoria
-          <select
-            value={categoria}
-            onChange={(evento) => onCategoria(evento.target.value)}
-            className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"
-          >
-            <option>Todos</option>
-            {categorias.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
         <label className="block text-sm font-semibold">
           Província
           <select
             value={provincia}
-            onChange={(evento) => onProvincia(evento.target.value)}
+            onChange={(evento) => {
+              onProvincia(evento.target.value);
+              onCidade("Todas");
+            }}
             className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"
           >
             <option>Todas</option>
@@ -279,7 +305,7 @@ export function FilterModal({
           Cidade ou distrito
           <select
             value={cidade}
-            disabled={!cidades.length}
+            disabled={provincia === "Todas"}
             onChange={(evento) => onCidade(evento.target.value)}
             className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal disabled:opacity-60"
           >
@@ -288,29 +314,31 @@ export function FilterModal({
               <option key={item}>{item}</option>
             ))}
           </select>
-          {!cidades.length && (
-            <small className="mt-1 block text-xs font-normal text-muted-foreground">Escolhe primeiro uma província.</small>
-          )}
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 pt-2">
           <AppButton
-            variant="outline"
+            variant="soft"
             onClick={() => {
-              onCategoria("Todos");
               onProvincia("Todas");
               onCidade("Todas");
             }}
           >
             Limpar
           </AppButton>
-          <AppButton onClick={onClose}>Aplicar filtros</AppButton>
+          <AppButton onClick={onClose}>Aplicar</AppButton>
         </div>
       </div>
     </ModalShell>
   );
 }
 
-export function SellModal({ onClose, onDone }: { onClose: () => void; onDone: (mensagem: string) => void }) {
+export function SellModal({
+  onClose,
+  onDone,
+}: {
+  onClose: () => void;
+  onDone: (mensagem: string) => void;
+}) {
   const { user, perfil } = useAuth();
   const queryClient = useQueryClient();
   const categorias = useQuery({ queryKey: ["categorias"], queryFn: listarCategorias });
@@ -324,7 +352,12 @@ export function SellModal({ onClose, onDone }: { onClose: () => void; onDone: (m
   const [categoriaId, setCategoriaId] = useState("");
   const [provincia, setProvincia] = useState(perfil?.provincia ?? "");
   const [distrito, setDistrito] = useState(perfil?.distrito ?? "");
-  const [foto, setFoto] = useState<File | null>(null);
+  const [fotos, setFotos] = useState<File[]>([]);
+  const [stock, setStock] = useState("1");
+  const [precoAntigo, setPrecoAntigo] = useState("");
+  const [envioGratis, setEnvioGratis] = useState(true);
+  const [custoEnvio, setCustoEnvio] = useState("");
+  const [marca, setMarca] = useState("");
   const [erro, setErro] = useState<string | null>(null);
 
   const cidades = citiesOf(provincia);
@@ -344,13 +377,21 @@ export function SellModal({ onClose, onDone }: { onClose: () => void; onDone: (m
           vendedor_id: user!.id,
           provincia: provincia || null,
           distrito: distrito || null,
+          stock: Math.max(0, Number(stock) || 0),
+          preco_antigo:
+            precoAntigo && Number(precoAntigo) > Number(preco) ? Number(precoAntigo) : null,
+          envio_gratis: envioGratis,
+          custo_envio: envioGratis ? 0 : Number(custoEnvio) || 0,
+          marca: marca.trim() || null,
         })
         .select("id")
         .single();
       if (error) throw error;
-      if (foto) {
+      for (const [indice, foto] of fotos.slice(0, 5).entries()) {
         const caminho = await enviarFoto("produtos", user!.id, foto);
-        await supabase.from("produto_fotos").insert({ produto_id: data.id, url: caminho, ordem: 0 });
+        await supabase
+          .from("produto_fotos")
+          .insert({ produto_id: data.id, url: caminho, ordem: indice });
       }
     },
     onSuccess: () => {
@@ -361,7 +402,7 @@ export function SellModal({ onClose, onDone }: { onClose: () => void; onDone: (m
   });
 
   return (
-    <ModalShell title="Publicar anúncio" onClose={onClose}>
+    <ModalShell title="Publicar produto" onClose={onClose}>
       <form
         className="mt-5 space-y-4"
         onSubmit={(evento) => {
@@ -376,7 +417,7 @@ export function SellModal({ onClose, onDone }: { onClose: () => void; onDone: (m
             required
             value={titulo}
             onChange={(evento) => setTitulo(evento.target.value)}
-            placeholder="Ex.: Milho branco"
+            placeholder="Ex.: Auscultadores Bluetooth ou Milho branco"
             className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"
           />
         </label>
@@ -386,7 +427,7 @@ export function SellModal({ onClose, onDone }: { onClose: () => void; onDone: (m
             value={descricao}
             onChange={(evento) => setDescricao(evento.target.value)}
             rows={3}
-            placeholder="Estado do produto, colheita, entrega..."
+            placeholder="Características, estado, garantia, prazo de entrega..."
             className="mt-2 w-full rounded-lg border border-border bg-card p-3 font-normal"
           />
         </label>
@@ -410,21 +451,49 @@ export function SellModal({ onClose, onDone }: { onClose: () => void; onDone: (m
               onChange={(evento) => setUnidade(evento.target.value)}
               className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"
             >
+              <option>unidade</option>
+              <option>par</option>
+              <option>conjunto</option>
               <option>kg</option>
               <option>saco</option>
-              <option>unidade</option>
               <option>molho</option>
             </select>
           </label>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-sm font-semibold">
-            Quantidade
+            Preço antigo (opcional)
             <input
               type="number"
               min="0"
-              value={quantidade}
-              onChange={(evento) => setQuantidade(evento.target.value)}
+              value={precoAntigo}
+              onChange={(evento) => setPrecoAntigo(evento.target.value)}
+              placeholder="Mostra desconto"
+              className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"
+            />
+          </label>
+          <label className="block text-sm font-semibold">
+            Marca (opcional)
+            <input
+              value={marca}
+              onChange={(evento) => setMarca(evento.target.value)}
+              placeholder="Ex.: Samsung"
+              className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"
+            />
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block text-sm font-semibold">
+            Stock disponível
+            <input
+              required
+              type="number"
+              min="0"
+              value={stock}
+              onChange={(evento) => {
+                setStock(evento.target.value);
+                setQuantidade(evento.target.value);
+              }}
               placeholder="Ex.: 50"
               className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"
             />
@@ -483,20 +552,51 @@ export function SellModal({ onClose, onDone }: { onClose: () => void; onDone: (m
           </label>
         </div>
         <label className="block text-sm font-semibold">
-          Fotografia do produto
+          Fotografias do produto (até 5)
           <input
             type="file"
             accept="image/*"
-            onChange={(evento) => setFoto(evento.target.files?.[0] ?? null)}
+            multiple
+            onChange={(evento) => setFotos(Array.from(evento.target.files ?? []).slice(0, 5))}
             className="mt-2 w-full rounded-lg border border-border bg-card p-2 text-xs font-normal"
           />
         </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input
+              type="checkbox"
+              checked={envioGratis}
+              onChange={(evento) => setEnvioGratis(evento.target.checked)}
+              className="size-4"
+            />
+            Entrega grátis
+          </label>
+          {!envioGratis && (
+            <label className="block text-sm font-semibold">
+              Custo de entrega (MZN)
+              <input
+                type="number"
+                min="0"
+                value={custoEnvio}
+                onChange={(evento) => setCustoEnvio(evento.target.value)}
+                className="mt-2 h-11 w-full rounded-lg border border-border bg-card px-3 font-normal"
+              />
+            </label>
+          )}
+        </div>
         <label className="flex items-center gap-2 text-sm font-semibold">
-          <input type="checkbox" checked={negociavel} onChange={(evento) => setNegociavel(evento.target.checked)} className="size-4" />
+          <input
+            type="checkbox"
+            checked={negociavel}
+            onChange={(evento) => setNegociavel(evento.target.checked)}
+            className="size-4"
+          />
           Preço negociável
         </label>
         {erro && <p className="text-sm text-destructive">{erro}</p>}
-        <p className="text-xs text-muted-foreground">O anúncio será revisto antes de aparecer no mercado.</p>
+        <p className="text-xs text-muted-foreground">
+          O anúncio será revisto antes de aparecer no mercado.
+        </p>
         <AppButton type="submit" className="w-full" disabled={publicar.isPending}>
           <PackagePlus className="size-4" /> Enviar para revisão
         </AppButton>

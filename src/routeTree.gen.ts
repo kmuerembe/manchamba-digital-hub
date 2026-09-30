@@ -10,11 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AprenderRouteImport } from './routes/aprender'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CarrinhoRouteImport } from './routes/carrinho'
+import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ContaRouteImport } from './routes/conta'
+import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
+import { Route as FavoritosRouteImport } from './routes/favoritos'
+import { Route as MensagensRouteImport } from './routes/mensagens'
+import { Route as PesquisaRouteImport } from './routes/pesquisa'
+import { Route as VenderRouteImport } from './routes/vender'
+import { Route as PedidosIndexRouteImport } from './routes/pedidos/index'
+import { Route as PedidosIdRouteImport } from './routes/pedidos/$id'
+import { Route as ProdutoIdRouteImport } from './routes/produto.$id'
+import { Route as ApiPagamentosEmolaCallbackRouteImport } from './routes/api/pagamentos/emola-callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AprenderRoute = AprenderRouteImport.update({
+  id: '/aprender',
+  path: '/aprender',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -22,31 +40,190 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CarrinhoRoute = CarrinhoRouteImport.update({
+  id: '/carrinho',
+  path: '/carrinho',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContaRoute = ContaRouteImport.update({
+  id: '/conta',
+  path: '/conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiagnosticoRoute = DiagnosticoRouteImport.update({
+  id: '/diagnostico',
+  path: '/diagnostico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritosRoute = FavoritosRouteImport.update({
+  id: '/favoritos',
+  path: '/favoritos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MensagensRoute = MensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PesquisaRoute = PesquisaRouteImport.update({
+  id: '/pesquisa',
+  path: '/pesquisa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VenderRoute = VenderRouteImport.update({
+  id: '/vender',
+  path: '/vender',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PedidosIndexRoute = PedidosIndexRouteImport.update({
+  id: '/pedidos/',
+  path: '/pedidos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PedidosIdRoute = PedidosIdRouteImport.update({
+  id: '/pedidos/$id',
+  path: '/pedidos/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdutoIdRoute = ProdutoIdRouteImport.update({
+  id: '/produto/$id',
+  path: '/produto/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPagamentosEmolaCallbackRoute =
+  ApiPagamentosEmolaCallbackRouteImport.update({
+    id: '/api/pagamentos/emola-callback',
+    path: '/api/pagamentos/emola-callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aprender': typeof AprenderRoute
   '/auth': typeof AuthRoute
+  '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
+  '/conta': typeof ContaRoute
+  '/diagnostico': typeof DiagnosticoRoute
+  '/favoritos': typeof FavoritosRoute
+  '/mensagens': typeof MensagensRoute
+  '/pesquisa': typeof PesquisaRoute
+  '/vender': typeof VenderRoute
+  '/pedidos/$id': typeof PedidosIdRoute
+  '/produto/$id': typeof ProdutoIdRoute
+  '/pedidos/': typeof PedidosIndexRoute
+  '/api/pagamentos/emola-callback': typeof ApiPagamentosEmolaCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aprender': typeof AprenderRoute
   '/auth': typeof AuthRoute
+  '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
+  '/conta': typeof ContaRoute
+  '/diagnostico': typeof DiagnosticoRoute
+  '/favoritos': typeof FavoritosRoute
+  '/mensagens': typeof MensagensRoute
+  '/pesquisa': typeof PesquisaRoute
+  '/vender': typeof VenderRoute
+  '/pedidos/$id': typeof PedidosIdRoute
+  '/produto/$id': typeof ProdutoIdRoute
+  '/pedidos': typeof PedidosIndexRoute
+  '/api/pagamentos/emola-callback': typeof ApiPagamentosEmolaCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/aprender': typeof AprenderRoute
   '/auth': typeof AuthRoute
+  '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
+  '/conta': typeof ContaRoute
+  '/diagnostico': typeof DiagnosticoRoute
+  '/favoritos': typeof FavoritosRoute
+  '/mensagens': typeof MensagensRoute
+  '/pesquisa': typeof PesquisaRoute
+  '/vender': typeof VenderRoute
+  '/pedidos/$id': typeof PedidosIdRoute
+  '/produto/$id': typeof ProdutoIdRoute
+  '/pedidos/': typeof PedidosIndexRoute
+  '/api/pagamentos/emola-callback': typeof ApiPagamentosEmolaCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth'
+  fullPaths:
+    | '/'
+    | '/aprender'
+    | '/auth'
+    | '/carrinho'
+    | '/checkout'
+    | '/conta'
+    | '/diagnostico'
+    | '/favoritos'
+    | '/mensagens'
+    | '/pesquisa'
+    | '/vender'
+    | '/pedidos/$id'
+    | '/produto/$id'
+    | '/pedidos/'
+    | '/api/pagamentos/emola-callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth'
-  id: '__root__' | '/' | '/auth'
+  to:
+    | '/'
+    | '/aprender'
+    | '/auth'
+    | '/carrinho'
+    | '/checkout'
+    | '/conta'
+    | '/diagnostico'
+    | '/favoritos'
+    | '/mensagens'
+    | '/pesquisa'
+    | '/vender'
+    | '/pedidos/$id'
+    | '/produto/$id'
+    | '/pedidos'
+    | '/api/pagamentos/emola-callback'
+  id:
+    | '__root__'
+    | '/'
+    | '/aprender'
+    | '/auth'
+    | '/carrinho'
+    | '/checkout'
+    | '/conta'
+    | '/diagnostico'
+    | '/favoritos'
+    | '/mensagens'
+    | '/pesquisa'
+    | '/vender'
+    | '/pedidos/$id'
+    | '/produto/$id'
+    | '/pedidos/'
+    | '/api/pagamentos/emola-callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AprenderRoute: typeof AprenderRoute
   AuthRoute: typeof AuthRoute
+  CarrinhoRoute: typeof CarrinhoRoute
+  CheckoutRoute: typeof CheckoutRoute
+  ContaRoute: typeof ContaRoute
+  DiagnosticoRoute: typeof DiagnosticoRoute
+  FavoritosRoute: typeof FavoritosRoute
+  MensagensRoute: typeof MensagensRoute
+  PesquisaRoute: typeof PesquisaRoute
+  VenderRoute: typeof VenderRoute
+  PedidosIdRoute: typeof PedidosIdRoute
+  ProdutoIdRoute: typeof ProdutoIdRoute
+  PedidosIndexRoute: typeof PedidosIndexRoute
+  ApiPagamentosEmolaCallbackRoute: typeof ApiPagamentosEmolaCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aprender': {
+      id: '/aprender'
+      path: '/aprender'
+      fullPath: '/aprender'
+      preLoaderRoute: typeof AprenderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -65,12 +249,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/carrinho': {
+      id: '/carrinho'
+      path: '/carrinho'
+      fullPath: '/carrinho'
+      preLoaderRoute: typeof CarrinhoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conta': {
+      id: '/conta'
+      path: '/conta'
+      fullPath: '/conta'
+      preLoaderRoute: typeof ContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diagnostico': {
+      id: '/diagnostico'
+      path: '/diagnostico'
+      fullPath: '/diagnostico'
+      preLoaderRoute: typeof DiagnosticoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favoritos': {
+      id: '/favoritos'
+      path: '/favoritos'
+      fullPath: '/favoritos'
+      preLoaderRoute: typeof FavoritosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mensagens': {
+      id: '/mensagens'
+      path: '/mensagens'
+      fullPath: '/mensagens'
+      preLoaderRoute: typeof MensagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pesquisa': {
+      id: '/pesquisa'
+      path: '/pesquisa'
+      fullPath: '/pesquisa'
+      preLoaderRoute: typeof PesquisaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vender': {
+      id: '/vender'
+      path: '/vender'
+      fullPath: '/vender'
+      preLoaderRoute: typeof VenderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pedidos/': {
+      id: '/pedidos/'
+      path: '/pedidos'
+      fullPath: '/pedidos/'
+      preLoaderRoute: typeof PedidosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pedidos/$id': {
+      id: '/pedidos/$id'
+      path: '/pedidos/$id'
+      fullPath: '/pedidos/$id'
+      preLoaderRoute: typeof PedidosIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produto/$id': {
+      id: '/produto/$id'
+      path: '/produto/$id'
+      fullPath: '/produto/$id'
+      preLoaderRoute: typeof ProdutoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pagamentos/emola-callback': {
+      id: '/api/pagamentos/emola-callback'
+      path: '/api/pagamentos/emola-callback'
+      fullPath: '/api/pagamentos/emola-callback'
+      preLoaderRoute: typeof ApiPagamentosEmolaCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AprenderRoute: AprenderRoute,
   AuthRoute: AuthRoute,
+  CarrinhoRoute: CarrinhoRoute,
+  CheckoutRoute: CheckoutRoute,
+  ContaRoute: ContaRoute,
+  DiagnosticoRoute: DiagnosticoRoute,
+  FavoritosRoute: FavoritosRoute,
+  MensagensRoute: MensagensRoute,
+  PesquisaRoute: PesquisaRoute,
+  VenderRoute: VenderRoute,
+  PedidosIdRoute: PedidosIdRoute,
+  ProdutoIdRoute: ProdutoIdRoute,
+  PedidosIndexRoute: PedidosIndexRoute,
+  ApiPagamentosEmolaCallbackRoute: ApiPagamentosEmolaCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
