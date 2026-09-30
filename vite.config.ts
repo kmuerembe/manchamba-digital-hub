@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // Permite pré-visualizações em túneis/sandboxes (ex.: *.e2b.app) além do Lovable.
+    server: { allowedHosts: true },
+  },
 });
